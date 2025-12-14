@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import useOrderFilter from '../../hooks/useOrderFilter';
 import { getOrderTableColumns } from '../../utilities/tableConfigurations/orderTableConfig';
 import DataTable from '../../components/ui/layout/DataTable';
+import PaginationControls from '../../components/ui/layout/PaginationControls';
 import BaseModal from '../../components/ui/modals/BaseModal';
 import UpdateOrderForm from './components/orders/UpdateOrderForm';
 import OrderDetailsModal from './components/orders/OrderDetailsModal';
@@ -67,6 +68,14 @@ const OrderManagementView = () => {
 
           {/* TanStack Table instead of MUI DataGrid */}
           <DataTable data={tableData} columns={columns} />
+
+          {/* Pagination Controls */}
+          <div className='flex justify-center pt-10'>
+            <PaginationControls
+              numberOfPage={pagination?.totalPages}
+              totalProducts={pagination?.totalElements}
+            />
+          </div>
 
           {/* Update Order Modal */}
           <BaseModal

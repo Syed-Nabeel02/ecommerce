@@ -19,6 +19,7 @@ import ImageUploadForm from './components/products/ImageUploadForm';
 import ProductQuickView from '../../components/ui/modals/ProductQuickView';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DataTable from '../../components/ui/layout/DataTable';
+import PaginationControls from '../../components/ui/layout/PaginationControls';
 
 const ProductManagementView = () => {
   const {catalogItems, pageInfo} = useSelector((state) => state.catalog);
@@ -117,6 +118,14 @@ const ProductManagementView = () => {
         <div className='max-w-full'>
           {/* TanStack Table instead of MUI DataGrid */}
           <DataTable data={tableData} columns={columns} />
+
+          {/* Pagination Controls */}
+          <div className='flex justify-center pt-10'>
+            <PaginationControls
+              numberOfPage={pageInfo?.totalPages}
+              totalProducts={pageInfo?.totalElements}
+            />
+          </div>
         </div>
       )}
 

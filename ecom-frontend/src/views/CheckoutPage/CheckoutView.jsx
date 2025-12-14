@@ -151,8 +151,10 @@ const CheckoutView = () => {
             ) : (
                 <button
                     disabled={errorMessage || (currentStep === 0 && !checkoutAddress) || (currentStep === 1 && !selectedPaymentMethod)}
-                    className={`bg-custom-blue font-semibold px-6 h-10 rounded-md text-white
-                       ${errorMessage || (currentStep === 0 && !checkoutAddress) || (currentStep === 1 && !selectedPaymentMethod) ? "opacity-60" : ""}`}
+                    className={`bg-custom-blue font-semibold px-6 h-10 rounded-md text-white transition-colors
+                       ${errorMessage || (currentStep === 0 && !checkoutAddress) || (currentStep === 1 && !selectedPaymentMethod)
+                         ? "opacity-60 cursor-not-allowed"
+                         : "hover:bg-blue-800"}`}
                     onClick={handleProceed}>
                     Proceed
                 </button>

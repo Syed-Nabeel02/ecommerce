@@ -15,6 +15,7 @@ import ErrorDisplay from "../../components/ui/feedback/ErrorDisplay";
 import { removeDashboardCategory } from "../../store/actions";
 import { getCategoryTableColumns } from "../../utilities/tableConfigurations/categoryTableConfig";
 import DataTable from "../../components/ui/layout/DataTable";
+import PaginationControls from "../../components/ui/layout/PaginationControls";
 
 const CategoryManagementView = () => {
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ const CategoryManagementView = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const { categoryLoader, errorMessage } = useSelector((state) => state.errors);
-  const { categoryList } = useSelector((state) => state.catalog);
+  const { categoryList, pageInfo } = useSelector((state) => state.catalog);
 
   useCategoryFilter();
 
@@ -85,6 +86,14 @@ const CategoryManagementView = () => {
           {/* TanStack Table */}
           <div className="max-w-fit mx-auto">
             <DataTable data={tableData} columns={columns} />
+
+            {/* Pagination Controls */}
+            <div className='flex justify-center pt-10'>
+              <PaginationControls
+                numberOfPage={pageInfo?.totalPages}
+                totalProducts={pageInfo?.totalElements}
+              />
+            </div>
           </div>
         </>
       )}

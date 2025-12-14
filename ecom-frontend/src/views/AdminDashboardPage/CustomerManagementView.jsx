@@ -9,12 +9,13 @@ import { useSelector } from 'react-redux';
 import useCustomerFilter from './components/customers/useCustomerFilter';
 import { getCustomerTableColumns } from '../../utilities/tableConfigurations/customerTableConfig';
 import DataTable from '../../components/ui/layout/DataTable';
+import PaginationControls from '../../components/ui/layout/PaginationControls';
 import CustomerDetailsModal from './components/customers/CustomerDetailsModal';
 
 const CustomerManagementView = () => {
   const [viewDetailsModal, setViewDetailsModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const { customers } = useSelector((state) => state.customer);
+  const { customers, pageInfo } = useSelector((state) => state.customer);
 
   useCustomerFilter();
 
@@ -48,6 +49,14 @@ const CustomerManagementView = () => {
 
           {/* TanStack Table */}
           <DataTable data={tableData} columns={columns} />
+
+          {/* Pagination Controls */}
+          <div className='flex justify-center pt-10'>
+            <PaginationControls
+              numberOfPage={pageInfo?.totalPages}
+              totalProducts={pageInfo?.totalElements}
+            />
+          </div>
 
           {/* Customer Details Modal */}
           <CustomerDetailsModal
