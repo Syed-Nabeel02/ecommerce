@@ -99,7 +99,7 @@ public class WebSecurityConfig {
 
     private void configureSecurityDefaults(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                .cors(cors -> cors.configure(http))
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> configureAuthorizationRules(auth));
