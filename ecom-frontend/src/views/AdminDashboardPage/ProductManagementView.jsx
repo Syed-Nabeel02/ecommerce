@@ -46,6 +46,7 @@ const ProductManagementView = () => {
   const tableData = catalogItems?.map((item) => ({
     id: item.productId,
     productName: item.productName,
+    model: item.model,
     description: item.description,
     image: item.image,
     price: item.price,

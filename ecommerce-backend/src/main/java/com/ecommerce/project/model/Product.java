@@ -22,6 +22,9 @@ public class Product {
     @Size(min = 3, message = "Product name must contain atleast 3 characters")
     private String productName;
 
+    // Product model/variant
+    private String model;
+
     // Product image filename
     private String image;
 
@@ -55,9 +58,10 @@ public class Product {
     }
 
     // Constructor with all fields
-    public Product(Long productId, String productName, String image, String description, Integer quantity, double price, Category category, User user, List<CartItem> products) {
+    public Product(Long productId, String productName, String model, String image, String description, Integer quantity, double price, Category category, User user, List<CartItem> products) {
         this.productId = productId;
         this.productName = productName;
+        this.model = model;
         this.image = image;
         this.description = description;
         this.quantity = quantity;
@@ -85,6 +89,16 @@ public class Product {
     // Set product name
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    // Get product model
+    public String getModel() {
+        return model;
+    }
+
+    // Set product model
+    public void setModel(String model) {
+        this.model = model;
     }
 
     // Get image filename

@@ -34,11 +34,12 @@ public class ProductsController {
     public ResponseEntity<?> getAllProducts(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "model", required = false) String model,
             @RequestParam(name = "pageNumber", defaultValue = Constants.page_num, required = false) Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = Constants.page_size, required = false) Integer pageSize,
             @RequestParam(name = "sortBy", defaultValue = Constants.products_sortBy, required = false) String sortBy,
             @RequestParam(name = "sortOrder", defaultValue = Constants.sort_order, required = false) String sortOrder) {
-        ProductResponse fetchedProducts = IProductService.getAllProducts(pageNumber, pageSize, sortBy, sortOrder, keyword, category);
+        ProductResponse fetchedProducts = IProductService.getAllProducts(pageNumber, pageSize, sortBy, sortOrder, keyword, category, model);
         return ResponseEntity.ok(fetchedProducts);
     }
 

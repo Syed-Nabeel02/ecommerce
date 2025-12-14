@@ -69,11 +69,11 @@ public class IProductServiceImpl implements IProductService {
     }
 
     @Override
-    public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
+    public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category, String model) {
         Sort sortingCriteria = buildSortCriteria(sortBy, sortOrder);
         Pageable paginationConfig = PageRequest.of(pageNumber, pageSize, sortingCriteria);
 
-        Specification<Product> filterSpecification = buildProductFilterSpecification(keyword, category);
+        Specification<Product> filterSpecification = buildProductFilterSpecification(keyword, category, model);
         Page<Product> paginatedProducts = productDAO.findAll(filterSpecification, paginationConfig);
 
         List<ProductDTO> productDataList = transformProductsToDTO(paginatedProducts.getContent());
@@ -199,7 +199,7 @@ public class IProductServiceImpl implements IProductService {
                 : Sort.by(sortBy).descending();
     }
 
-    private Specification<Product> buildProductFilterSpecification(String keyword, String category) {
+    private Specification<Product> buildProductFilterSpecification(String keyword, String category, String model) {
         Specification<Product> filterSpecification = Specification.where(
                 (root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
 
@@ -211,6 +211,11 @@ public class IProductServiceImpl implements IProductService {
         if (category != null && !category.isEmpty()) {
             filterSpecification = filterSpecification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.like(root.get("category").get("categoryName"), category));
+        }
+
+        if (model != null && !model.isEmpty()) {
+            filterSpecification = filterSpecification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("model")), "%" + model.toLowerCase() + "%"));
         }
 
         return filterSpecification;

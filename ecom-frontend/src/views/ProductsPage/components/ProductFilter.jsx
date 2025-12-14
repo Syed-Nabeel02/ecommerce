@@ -17,16 +17,22 @@ const ProductFilter = ({ categories }) => {
     const navigate = useNavigate();
     
     const [category, setCategory] = useState("all");
+    const [model, setModel] = useState("");
     const [sortOrder, setSortOrder] = useState("asc");
+    const [sortField, setSortField] = useState("price");
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const currentCategory = searchParams.get("category") || "all";
+        const currentModel = searchParams.get("model") || "";
         const currentSortOrder = searchParams.get("sortby") || "asc";
+        const currentSortField = searchParams.get("sortfield") || "price";
         const currentSearchTerm = searchParams.get("keyword") || "";
 
         setCategory(currentCategory);
+        setModel(currentModel);
         setSortOrder(currentSortOrder);
+        setSortField(currentSortField);
         setSearchTerm(currentSearchTerm);
     }, [searchParams]);
 
@@ -55,6 +61,13 @@ const ProductFilter = ({ categories }) => {
         }
         navigate(`${pathname}?${params}`);
         setCategory(event.target.value);
+    };
+
+    const handleSortFieldChange = (event) => {
+        const selectedField = event.target.value;
+        params.set("sortfield", selectedField);
+        navigate(`${pathname}?${params}`);
+        setSortField(selectedField);
     };
 
     const toggleSortOrder = () => {
@@ -106,19 +119,55 @@ const ProductFilter = ({ categories }) => {
                          </Select>
                 </FormControl>
 
-                {/* SORT BUTTON & CLEAR FILTER */}
-                <Tooltip title="Sorted by price: asc">
-                    <Button variant="contained" 
+                {/* MODEL FILTER INPUT */}
+                <input
+                    type="text"
+                    placeholder="Filter by Model"
+                    value={model}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setModel(value);
+                        if (value) {
+                            params.set("model", value);
+                        } else {
+                            params.delete("model");
+                        }
+                        navigate(`${pathname}?${params}`);
+                    }}
+                    className="border border-gray-400 text-slate-800 rounded-md py-2 px-4 min-w-[150px] focus:outline-hidden focus:ring-2 focus:ring-[#1976d2]"
+                />
+
+                {/* SORT FIELD SELECTION */}
+                <FormControl
+                    className="text-slate-800 border-slate-700"
+                    variant="outlined"
+                    size="small">
+                        <InputLabel id="sort-field-label">Sort By</InputLabel>
+                        <Select
+                            labelId="sort-field-label"
+                            value={sortField}
+                            onChange={handleSortFieldChange}
+                            label="Sort By"
+                            className="min-w-[140px] text-slate-800 border-slate-700"
+                         >
+                            <MenuItem value="price">Price</MenuItem>
+                            <MenuItem value="productName">Product Name</MenuItem>
+                         </Select>
+                </FormControl>
+
+                {/* SORT ORDER BUTTON & CLEAR FILTER */}
+                <Tooltip title={`Toggle sort order (currently ${sortOrder === "asc" ? "ascending" : "descending"})`}>
+                    <Button variant="contained"
                         onClick={toggleSortOrder}
-                        color="primary" 
+                        color="primary"
                         className="flex items-center gap-2 h-10">
-                        Sort By
+                        Order
                         {sortOrder === "asc" ? (
                             <FiArrowUp size={20} />
                         ) : (
                             <FiArrowDown size={20} />
                         )}
-                        
+
                     </Button>
                 </Tooltip>
                 <button 

@@ -61,6 +61,7 @@ const saveProductHandler = (data) => {
 useEffect(() => {
     if (update && product) {
         setValue("productName", product?.productName);
+        setValue("model", product?.model);
         setValue("price", product?.price);
         setValue("quantity", product?.quantity);
         setValue("description", product?.description);
@@ -137,6 +138,19 @@ return (
                   />
           </div>
 
+      {/* Model field */}
+      <div className='flex md:flex-row flex-col gap-4 w-full'>
+          <TextInput
+              label="Model"
+              id="model"
+              type="text"
+              message=""
+              register={register}
+              placeholder="Product Model (Optional)"
+              errors={errors}
+              />
+      </div>
+
       {/* Description field */}
       <div className="flex flex-col gap-2 w-full">
           <label htmlFor='desc'
@@ -153,6 +167,8 @@ return (
               maxLength={255}
               {...register("description", {
                   required: {value: true, message:"Description is required"},
+                  minLength: {value: 10, message: "Description must be at least 10 characters"},
+                  maxLength: {value: 255, message: "Description must not exceed 255 characters"},
               })}
               />
 

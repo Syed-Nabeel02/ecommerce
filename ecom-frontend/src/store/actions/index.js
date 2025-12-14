@@ -644,8 +644,8 @@ export const modifyDashboardProduct =
         setOpen(false);
         await dispatch(loadDashboardCatalog());
     } catch (error) {
-        toast.error(error?.response?.data?.description || "Product update failed");
-
+        toast.error(error?.response?.data?.message || "Product update failed");
+        setLoader(false);
     }
 };
 
@@ -664,7 +664,7 @@ export const createDashboardProduct =
             await dispatch(loadDashboardCatalog());
         } catch (error) {
             console.error(error);
-            toast.error(error?.response?.data?.description || "Product creation failed");
+            toast.error(error?.response?.data?.message || "Product creation failed");
         } finally {
             setLoader(false);
         }
@@ -698,8 +698,8 @@ export const uploadProductImageDashboard =
         setOpen(false);
         await dispatch(loadDashboardCatalog());
     } catch (error) {
-        toast.error(error?.response?.data?.description || "Product Image upload failed");
-
+        toast.error(error?.response?.data?.message || "Product image upload failed");
+        setLoader(false);
     }
 };
 

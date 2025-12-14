@@ -1,4 +1,3 @@
-// javascript
 import { useState } from 'react';
 import { FaShoppingCart, FaEye } from 'react-icons/fa';
 import ProductQuickView from '../modals/ProductQuickView';
@@ -9,6 +8,7 @@ import toast from 'react-hot-toast';
 const ProductCard = ({
         productId,
         productName,
+        model,
         image,
         description,
         quantity,
@@ -26,6 +26,7 @@ const ProductCard = ({
         if (!about) {
             setSelectedViewProduct(product);
             setOpenProductViewModal(true);
+            setIsHovered(false);
         }
     };
 
@@ -41,17 +42,18 @@ const ProductCard = ({
         >
             {/* Stock Badge */}
             {!isAvailable && (
-                <div className="absolute top-4 right-4 z-10 bg-red-700 text-white px-3 py-1 rounded-full text-xs font-bold">
+                <div className="absolute top-4 right-4 z-10 bg-red-700 text-white px-3 py-1 rounded-full text-s font-bold">
                     Out of Stock
                 </div>
             )}
 
-            {/* Image Container - Taller */}
+            {/* Image Container  */}
             <div
                 onClick={() => {
                     handleProductView({
                         id: productId,
                         productName,
+                        model,
                         image,
                         description,
                         quantity,
@@ -84,6 +86,7 @@ const ProductCard = ({
                         handleProductView({
                             id: productId,
                             productName,
+                            model,
                             image,
                             description,
                             quantity,
@@ -94,6 +97,12 @@ const ProductCard = ({
                 >
                     {productName}
                 </h2>
+
+                {model && (
+                    <p className="text-gray-600 text-s font-semibold mb-1">
+                        Model: {model}
+                    </p>
+                )}
 
                 <p className="text-gray-500 text-xs mb-3 line-clamp-1">
                     {description}

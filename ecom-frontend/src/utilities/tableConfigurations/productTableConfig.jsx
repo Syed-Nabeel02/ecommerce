@@ -30,6 +30,11 @@ export const getProductTableColumns = (
     cell: info => info.getValue(),
   },
   {
+    accessorKey: 'model',
+    header: 'Model',
+    cell: info => info.getValue() || '-',
+  },
+  {
     accessorKey: 'price',
     header: 'Price',
     cell: info => `$${Number(info.getValue()).toFixed(2)}`,
@@ -50,7 +55,12 @@ export const getProductTableColumns = (
   {
     accessorKey: 'image',
     header: 'Image',
-    cell: info => info.getValue() ? 'Yes' : 'No',
+    cell: info => {
+      const imageValue = info.getValue();
+      // Check if image exists and is not the default placeholder
+      const hasImage = imageValue && !imageValue.includes('default.png');
+      return hasImage ? 'Yes' : 'No';
+    },
   },
   {
     id: 'actions',

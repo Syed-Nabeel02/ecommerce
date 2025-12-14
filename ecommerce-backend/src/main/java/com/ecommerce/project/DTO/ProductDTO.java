@@ -3,6 +3,7 @@ package com.ecommerce.project.DTO;
 public class ProductDTO {
     private Long productId;
     private String productName;
+    private String model;
     private String image;
     private String description;
     private Integer quantity;
@@ -11,9 +12,10 @@ public class ProductDTO {
     public ProductDTO() {
     }
 
-    public ProductDTO(Long productId, String productName, String image, String description, Integer quantity, double price) {
+    public ProductDTO(Long productId, String productName, String model, String image, String description, Integer quantity, double price) {
         this.productId = productId;
         this.productName = productName;
+        this.model = model;
         this.image = image;
         this.description = description;
         this.quantity = quantity;
@@ -34,6 +36,14 @@ public class ProductDTO {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
     }
 
     public String getImage() {

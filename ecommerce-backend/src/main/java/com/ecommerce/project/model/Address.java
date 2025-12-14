@@ -14,6 +14,10 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long addressId;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @NotBlank
     @Size(min = 5, message = "Street name must be atleast 5 characters")
     private String street;
@@ -37,10 +41,6 @@ public class Address {
     @NotBlank
     @Size(min = 5, message = "Pincode must be atleast 5 characters")
     private String pincode;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
 
     public Address() {
     }

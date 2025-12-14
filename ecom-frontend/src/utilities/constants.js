@@ -3,7 +3,9 @@
  * Application-wide constants to avoid magic numbers and strings.
  * Centralized location for all configuration values.
  */
-
+import bannerImageOne from "../assets/sliders/s_1.png";
+import bannerImageTwo from "../assets/sliders/s_2.png";
+import bannerImageThree from "../assets/sliders/s_3.png";
 // ============================================
 // APPLICATION INFO
 // ============================================
@@ -18,12 +20,6 @@ export const ORDERS_PER_PAGE = 10;
 export const CUSTOMERS_PER_PAGE = 10;
 export const CATEGORIES_PER_PAGE = 10;
 
-// ============================================
-// CART & CHECKOUT
-// ============================================
-export const FREE_SHIPPING_THRESHOLD = 50;
-export const SHIPPING_COST = 5.99;
-export const TAX_RATE = 0.08; // 8% tax
 
 // ============================================
 // STOCK LEVELS
@@ -89,13 +85,16 @@ export const LS_CHECKOUT_PAYMENT_CARD_KEY = 'CHECKOUT_PAYMENT_CARD';
 // ============================================
 export const API_BASE_URL = import.meta.env.VITE_BACK_END_URL || 'http://localhost:8080';
 
-// ============================================
-// CAROUSEL SETTINGS
-// ============================================
-export const CAROUSEL_AUTOPLAY_SPEED = 3000; // 4 seconds
-export const CAROUSEL_TRANSITION_SPEED = 600; // 0.6 seconds
 
 // ============================================
 // DEBOUNCE DELAYS
 // ============================================
 export const SEARCH_DEBOUNCE_DELAY = 700; // 0.7 seconds for search input
+
+
+
+export {
+    bannerImageOne,
+    bannerImageTwo,
+    bannerImageThree
+}

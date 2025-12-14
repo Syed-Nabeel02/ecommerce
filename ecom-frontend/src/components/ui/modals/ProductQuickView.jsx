@@ -13,7 +13,7 @@ import { MdClose, MdDone } from 'react-icons/md';
 
 function ProductQuickView({open, setOpen, product, isAvailable}) {
 
-  const {id, productName, image, description, quantity, price} = product;
+  const {id, productName, model, image, description, quantity, price} = product;
   const handleClickOpen = () => {
     setOpen(true);
   }
@@ -39,10 +39,15 @@ function ProductQuickView({open, setOpen, product, isAvailable}) {
 
 
                 <div className='px-6 pt-10 pb-2'>
-                <DialogTitle as="h1" className="lg:text-3xl sm:text-2xl text-xl font-semibold leading-6 text-gray-800 mb-4">
+                <DialogTitle as="h1" className="lg:text-3xl sm:text-2xl text-xl font-semibold leading-6 text-gray-800 mb-2">
                 {productName}
               </DialogTitle>
 
+              {model && (
+                <p className="text-gray-600 text-sm font-semibold mb-4">
+                  Model: {model}
+                </p>
+              )}
 
               <div className="space-y-2 text-gray-700 pb-4">
                 <div className="flex items-center justify-between gap-2">
