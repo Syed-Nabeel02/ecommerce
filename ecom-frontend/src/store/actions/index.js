@@ -283,7 +283,7 @@ export const resetCheckoutAddress = () => {
 export const fetchUserAddressList = () => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        const { data } = await api.get(`/addresses`);
+        const { data } = await api.get(`/users/addresses`);
         dispatch({type: "LOAD_USER_ADDRESSES", payload: data});
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
