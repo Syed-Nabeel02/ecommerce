@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import SelectDropdown from '../../../../components/ui/forms/SelectDropdown';
 import ErrorDisplay from '../../../../components/ui/feedback/ErrorDisplay';
 
-const AddProductForm = ({ setOpen, product, update=false}) => {
+const AddProductForm = ({ setOpen, product, update=false, navigate, pathname}) => {
 // State for button loading
 const [loader, setLoader] = useState(false);
 
@@ -53,7 +53,7 @@ const saveProductHandler = (data) => {
             ...data,
             id: product.id,
         };
-        dispatch(modifyDashboardProduct(sendData, toast, reset, setLoader, setOpen));
+        dispatch(modifyDashboardProduct(sendData, toast, reset, setLoader, setOpen, navigate, pathname));
     }
 };
 

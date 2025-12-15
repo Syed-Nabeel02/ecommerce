@@ -41,7 +41,7 @@ const ORDER_STATUSES = [
     "Accepted",     // Order accepted and ready for processing
 ];
 
-const UpdateOrderForm = ({ setOpen, selectedId, selectedItem, loader, setLoader}) => {
+const UpdateOrderForm = ({ setOpen, selectedId, selectedItem, loader, setLoader, navigate, pathname}) => {
     const [orderStatus, setOrderStatus] = useState(selectedItem?.status || 'Accepted');
     const [error, setError] = useState("");
     const dispatch = useDispatch();
@@ -64,7 +64,9 @@ const UpdateOrderForm = ({ setOpen, selectedId, selectedItem, loader, setLoader}
             selectedId,
             orderStatus,
             toast,
-            setLoader
+            setLoader,
+            navigate,
+            pathname
         ));
     };
 

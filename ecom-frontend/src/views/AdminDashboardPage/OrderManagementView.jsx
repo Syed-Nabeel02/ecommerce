@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaShoppingCart } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import useOrderFilter from '../../hooks/useOrderFilter';
@@ -16,6 +17,9 @@ import UpdateOrderForm from './components/orders/UpdateOrderForm';
 import OrderDetailsModal from './components/orders/OrderDetailsModal';
 
 const OrderManagementView = () => {
+  const navigate = useNavigate();
+  const pathname = useLocation().pathname;
+  const [searchParams] = useSearchParams();
   const {adminOrder, pagination} = useSelector((state) => state.order);
   const [updateOpenModal, setUpdateOpenModal] = useState(false);
   const [viewDetailsModal, setViewDetailsModal] = useState(false);
@@ -89,6 +93,8 @@ const OrderManagementView = () => {
                 setLoader={setLoader}
                 selectedId={selectedItem.id}
                 selectedItem={selectedItem}
+                navigate={navigate}
+                pathname={pathname}
               />
           </BaseModal>
 

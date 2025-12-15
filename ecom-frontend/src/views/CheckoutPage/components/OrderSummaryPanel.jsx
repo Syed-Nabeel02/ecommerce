@@ -82,7 +82,7 @@ const OrderSummaryPanel = ({ totalPrice, cart, address, paymentMethod, paymentCa
                 {cart?.map((item) => (
                   <div key={item?.productId} className="flex items-center gap-3 py-2">
                     <img
-                      src={`${import.meta.env.VITE_BACK_END_URL}/images/${item?.image}`}
+                      src={item?.image}
                       alt="Product"
                       className="w-16 h-16 rounded-md object-cover border"
                     />

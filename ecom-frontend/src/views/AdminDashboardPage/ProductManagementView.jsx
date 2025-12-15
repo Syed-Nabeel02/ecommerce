@@ -76,7 +76,7 @@ const ProductManagementView = () => {
   };
 
   const handleDeleteConfirm = () => {
-    dispatch(removeCatalogItem(setIsDeleting, selectedProduct?.id, toast, setOpenConfirmDeleteDialog));
+    dispatch(removeCatalogItem(setIsDeleting, selectedProduct?.id, toast, setOpenConfirmDeleteDialog, navigate, pathname));
   };
 
   const isEmpty = !catalogItems || catalogItems?.length === 0;
@@ -138,6 +138,8 @@ const ProductManagementView = () => {
             setOpen={openUpdateModal ? setOpenUpdateModal : setOpenAddModal}
             product={selectedProduct}
             update={openUpdateModal}
+            navigate={navigate}
+            pathname={pathname}
           />
       </BaseModal>
 

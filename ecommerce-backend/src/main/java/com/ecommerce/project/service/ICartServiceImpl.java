@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.project.DAO.CartDAO;
@@ -36,6 +37,10 @@ public class ICartServiceImpl implements ICartService {
 
     // Helper for getting logged-in user info
     private final AuthHelper authHelper;
+
+    // Base URL for product images
+    @Value("${image.base.url}")
+    private String imageBaseUrl;
 
     // Constructor - Spring automatically injects these dependencies
     public ICartServiceImpl(CartDAO cartDAO, CartItemDAO cartItemDAO, ProductDAO productDAO,
@@ -244,12 +249,24 @@ public class ICartServiceImpl implements ICartService {
                 .map(cartElement -> {
                     ProductDTO mappedProduct = modelMapper.map(cartElement.getProduct(), ProductDTO.class);
                     mappedProduct.setQuantity(cartElement.getQuantity());
+                    // Construct full image URL for cart items
+                    mappedProduct.setImage(constructImageUrl(cartElement.getProduct().getImage()));
                     return mappedProduct;
                 })
                 .collect(Collectors.toList());
 
         cartDataTransfer.setProducts(productList);
         return cartDataTransfer;
+    }
+
+    // Helper: Construct full image URL (handles both Cloudinary and local images)
+    private String constructImageUrl(String imageName) {
+        // If image is already a full URL (from Cloudinary), return as-is
+        if (imageName != null && (imageName.startsWith("http://") || imageName.startsWith("https://"))) {
+            return imageName;
+        }
+        // Otherwise, construct URL for local/legacy images
+        return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
     }
 
     // Helper: Find cart by email and ID or throw error

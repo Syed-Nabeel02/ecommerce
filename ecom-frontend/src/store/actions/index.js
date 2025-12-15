@@ -568,11 +568,15 @@ export const getOrdersForDashboard = (queryString) => async (dispatch) => {
 
 
 export const updateOrderStatusFromDashboard =
-     (orderId, orderStatus, toast, setLoader) => async (dispatch, getState) => {
+     (orderId, orderStatus, toast, setLoader, navigate, pathname) => async (dispatch, getState) => {
     try {
         setLoader(true);
         const { data } = await api.put(`/admin/orders/${orderId}/status`, { status: orderStatus});
         toast.success(data.message || "Order updated successfully");
+        // Navigate back to page 1 after updating
+        if (navigate && pathname) {
+            navigate(pathname);
+        }
         await dispatch(getOrdersForDashboard());
     } catch (error) {
         console.log(error);
@@ -634,7 +638,7 @@ export const loadDashboardCatalog = (queryString) => async (dispatch) => {
 
 
 export const modifyDashboardProduct =
-    (sendData, toast, reset, setLoader, setOpen) => async (dispatch) => {
+    (sendData, toast, reset, setLoader, setOpen, navigate, pathname) => async (dispatch) => {
     try {
         setLoader(true);
         await api.put(`/admin/products/${sendData.id}`, sendData);
@@ -642,6 +646,10 @@ export const modifyDashboardProduct =
         reset();
         setLoader(false);
         setOpen(false);
+        // Navigate back to page 1 after updating
+        if (navigate && pathname) {
+            navigate(pathname);
+        }
         await dispatch(loadDashboardCatalog());
     } catch (error) {
         toast.error(error?.response?.data?.message || "Product update failed");
@@ -671,13 +679,17 @@ export const createDashboardProduct =
     }
 
 export const removeCatalogItem =
-    (setLoader, productId, toast, setOpenDeleteModal) => async (dispatch, getState) => {
+    (setLoader, productId, toast, setOpenDeleteModal, navigate, pathname) => async (dispatch, getState) => {
     try {
         setLoader(true)
         await api.delete(`/admin/products/${productId}`);
         toast.success("Product deleted successfully");
         setLoader(false);
         setOpenDeleteModal(false);
+        // Navigate back to page 1 after deleting
+        if (navigate && pathname) {
+            navigate(pathname);
+        }
         await dispatch(loadDashboardCatalog());
     } catch (error) {
         console.log(error);
@@ -752,7 +764,7 @@ export const addNewCategoryDashboard =
   };
 
 export const modifyDashboardCategory =
-  (sendData, setOpen, categoryID, reset, toast) =>
+  (sendData, setOpen, categoryID, reset, toast, navigate, pathname) =>
   async (dispatch, getState) => {
     try {
       dispatch({ type: "CATEGORY_LOADER" });
@@ -764,6 +776,10 @@ export const modifyDashboardCategory =
       reset();
       toast.success("Category Update Successful");
       setOpen(false);
+      // Navigate back to page 1 after updating
+      if (navigate && pathname) {
+        navigate(pathname);
+      }
       await dispatch(fetchAllDashboardCategories());
     } catch (err) {
       console.log(err);
@@ -779,7 +795,7 @@ export const modifyDashboardCategory =
   };
 
 export const removeDashboardCategory =
-  (setOpen, categoryID, toast) => async (dispatch, getState) => {
+  (setOpen, categoryID, toast, navigate, pathname) => async (dispatch, getState) => {
     try {
       dispatch({ type: "CATEGORY_LOADER" });
 
@@ -789,6 +805,10 @@ export const removeDashboardCategory =
 
       toast.success("Category Delete Successful");
       setOpen(false);
+      // Navigate back to page 1 after deleting
+      if (navigate && pathname) {
+        navigate(pathname);
+      }
       await dispatch(fetchAllDashboardCategories());
     } catch (err) {
       console.log(err);

@@ -34,7 +34,7 @@ import {
 } from "../../../../store/actions";
 import TextInput from "../../../../components/ui/forms/TextInput";
 
-const AddCategoryForm = ({ setOpen, open, category, update = false }) => {
+const AddCategoryForm = ({ setOpen, open, category, update = false, navigate, pathname }) => {
   const dispatch = useDispatch();
 
   const {
@@ -59,7 +59,7 @@ const AddCategoryForm = ({ setOpen, open, category, update = false }) => {
     } else {
       // UPDATE MODE: Modify existing category identified by category.id
       dispatch(
-        modifyDashboardCategory(data, setOpen, category.id, reset, toast)
+        modifyDashboardCategory(data, setOpen, category.id, reset, toast, navigate, pathname)
       );
     }
   };

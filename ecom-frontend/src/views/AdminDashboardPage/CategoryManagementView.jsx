@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { FaFolderOpen, FaThList } from "react-icons/fa";
 import toast from "react-hot-toast";
 import BaseModal from "../../components/ui/modals/BaseModal";
@@ -19,6 +20,9 @@ import PaginationControls from "../../components/ui/layout/PaginationControls";
 
 const CategoryManagementView = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const pathname = useLocation().pathname;
+  const [searchParams] = useSearchParams();
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [openConfirmDeleteDialog, setOpenConfirmDeleteDialog] = useState(false);
@@ -47,7 +51,7 @@ const CategoryManagementView = () => {
   };
 
   const handleDeleteConfirm = () => {
-    dispatch(removeDashboardCategory(setOpenConfirmDeleteDialog, selectedCategory?.id, toast));
+    dispatch(removeDashboardCategory(setOpenConfirmDeleteDialog, selectedCategory?.id, toast, navigate, pathname));
   };
 
   const isEmpty = !categoryList || categoryList?.length === 0;
@@ -108,6 +112,8 @@ const CategoryManagementView = () => {
           open={categoryLoader}
           category={selectedCategory}
           update={openUpdateModal}
+          navigate={navigate}
+          pathname={pathname}
         />
       </BaseModal>
 
