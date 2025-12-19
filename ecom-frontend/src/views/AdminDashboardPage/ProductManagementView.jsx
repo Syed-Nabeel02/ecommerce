@@ -116,8 +116,13 @@ const ProductManagementView = () => {
         </div>
       ) : (
         <div className='max-w-full'>
-          {/* TanStack Table instead of MUI DataGrid */}
-          <DataTable data={tableData} columns={columns} />
+          {/* TanStack Table with Search Feature */}
+          <DataTable
+            data={tableData}
+            columns={columns}
+            enableSearch={true}
+            searchPlaceholder="Search products by name, model, description..."
+          />
 
           {/* Pagination Controls */}
           <div className='flex justify-center pt-10'>

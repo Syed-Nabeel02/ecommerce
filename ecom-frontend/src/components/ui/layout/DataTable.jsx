@@ -29,14 +29,17 @@
  * but we build the UI ourselves. This gives us more control and lighter bundle size.
  */
 
-import { useReactTable, getCoreRowModel, flexRender, getSortedRowModel } from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, flexRender, getSortedRowModel, getFilteredRowModel } from '@tanstack/react-table';
 import { useState } from 'react';
+import { FaSearch } from 'react-icons/fa';
 
 /**
  * DataTable Component
  *
  * @param {Array} data - Array of data objects to display in the table
  * @param {Array} columns - Column configuration array (from tableConfigurations/)
+ * @param {boolean} enableSearch - Whether to show the search bar (default: true)
+ * @param {string} searchPlaceholder - Placeholder text for search input
  *
  * Column configuration format:
  * {
@@ -56,12 +59,17 @@ import { useState } from 'react';
  * <DataTable
  *   data={products}
  *   columns={productColumns}
+ *   enableSearch={true}
+ *   searchPlaceholder="Search products..."
  * />
  */
-const DataTable = ({ data, columns }) => {
+const DataTable = ({ data, columns, enableSearch = true, searchPlaceholder = "Search..." }) => {
   // State for managing sort order (which column and direction)
   // Example: [{id: 'productName', desc: false}] means sort by name ascending
   const [sorting, setSorting] = useState([]);
+
+  // State for global search filter
+  const [globalFilter, setGlobalFilter] = useState('');
 
   // Initialize the table instance with TanStack Table
   // This returns methods and state for rendering and managing the table
@@ -70,20 +78,47 @@ const DataTable = ({ data, columns }) => {
     columns,                        // Column definitions (headers, accessors, cell renderers)
     getCoreRowModel: getCoreRowModel(),     // Required for basic table functionality
     getSortedRowModel: getSortedRowModel(), // Enables sorting functionality
+    getFilteredRowModel: getFilteredRowModel(), // Enables filtering/searching
     state: {
       sorting,                      // Current sort state
+      globalFilter,                 // Current search filter
     },
     onSortingChange: setSorting,    // Function to update sort when user clicks headers
+    onGlobalFilterChange: setGlobalFilter, // Function to update search filter
   });
 
   return (
-    // Outer container with horizontal scroll for mobile responsiveness
-    // On mobile, table can scroll left/right if it's too wide
-    <div className="overflow-x-auto">
+    <div>
+      {/* Search Bar */}
+      {enableSearch && (
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 text-gray-900 placeholder-gray-400"
+            />
+          </div>
+          {globalFilter && (
+            <p className="mt-2 text-sm text-gray-600">
+              Found {tableInstance.getFilteredRowModel().rows.length} of {data.length} results
+            </p>
+          )}
+        </div>
+      )}
 
-      {/* The actual HTML table element */}
-      {/* w-full makes it full width, border-collapse merges cell borders */}
-      <table className="w-full border-collapse">
+      {/* Outer container with horizontal scroll for mobile responsiveness */}
+      {/* On mobile, table can scroll left/right if it's too wide */}
+      <div className="overflow-x-auto">
+
+        {/* The actual HTML table element */}
+        {/* w-full makes it full width, border-collapse merges cell borders */}
+        <table className="w-full border-collapse">
 
         {/* Table Header */}
         <thead>
@@ -152,12 +187,13 @@ const DataTable = ({ data, columns }) => {
         </tbody>
       </table>
 
-      {/* Empty state message - shown when there's no data */}
-      {data.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No data available
-        </div>
-      )}
+        {/* Empty state message - shown when there's no data or no search results */}
+        {tableInstance.getFilteredRowModel().rows.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            {globalFilter ? `No results found for "${globalFilter}"` : 'No data available'}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
