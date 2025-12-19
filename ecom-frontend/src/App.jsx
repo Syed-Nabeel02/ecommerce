@@ -1,15 +1,19 @@
 /**
  * App.jsx
- * Main application component with routing configuration.
- * Uses new View components with 'View' suffix for better organization.
+ * Main application component that sets up routing for the entire e-commerce app.
+ * Handles public routes (home, products), protected routes (checkout, profile),
+ * and admin-only routes (dashboard, product management).
  */
 
+// React core library for building UI components
 import React, { useState } from 'react'
 import './App.css'
+// React Router for navigation between pages
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+// Toast notifications library for user feedback messages
 import { Toaster } from 'react-hot-toast'
 
-// View Components (main pages with 'View' suffix)
+// Public page components - accessible to all users
 import HomeView from './views/HomePage/HomeView'
 import ProductsView from './views/ProductsPage/ProductsView'
 import CartView from './views/ShoppingCartPage/CartView'
@@ -18,7 +22,7 @@ import RegisterView from './views/AuthenticationPage/RegisterView'
 import CheckoutView from './views/CheckoutPage/CheckoutView'
 import ProfileView from './views/UserProfilePage/ProfileView'
 
-// Admin View Components
+// Admin dashboard components - only for admin users
 import AdminLayoutWrapper from './views/AdminDashboardPage/AdminLayoutWrapper'
 import DashboardView from './views/AdminDashboardPage/DashboardView'
 import ProductManagementView from './views/AdminDashboardPage/ProductManagementView'
@@ -26,14 +30,17 @@ import OrderManagementView from './views/AdminDashboardPage/OrderManagementView'
 import CategoryManagementView from './views/AdminDashboardPage/CategoryManagementView'
 import CustomerManagementView from './views/AdminDashboardPage/CustomerManagementView'
 
-// Shared Components
+// Reusable components used across the app
 import TopNavBar from './components/ui/navigation/TopNavBar'
 import PrivateRoute from './components/PrivateRoute'
 
-// Components not yet migrated (will be moved in later phases)
+// Order confirmation page
 import OrderConfirmationView from './views/OrderConfirmationPage/OrderConfirmationView'
 
-
+/**
+ * Main App Component
+ * Sets up the entire routing structure and navigation for the application
+ */
 function App() {
   return (
     <React.Fragment>

@@ -76,7 +76,11 @@ const CustomerDetailsModal = ({ open, setOpen, customer }) => {
         {activeTab === 'addresses' && (
           <div>
             {selectedCustomerDetails?.addresses?.length > 0 ? (
-              <AddressInfo address={selectedCustomerDetails.addresses} />
+              <AddressInfo
+                address={selectedCustomerDetails.addresses}
+                customerId={customer.id}
+                isAdminMode={true}
+              />
             ) : (
               <p className="text-sm text-gray-600 mb-4">No addresses found for this customer</p>
             )}
@@ -86,7 +90,11 @@ const CustomerDetailsModal = ({ open, setOpen, customer }) => {
         {activeTab === 'cards' && (
           <div>
             {selectedCustomerDetails?.paymentCards?.length > 0 ? (
-              <PaymentCardInfo cards={selectedCustomerDetails.paymentCards} />
+              <PaymentCardInfo
+                cards={selectedCustomerDetails.paymentCards}
+                customerId={customer.id}
+                isAdminMode={true}
+              />
             ) : (
               <p className="text-sm text-gray-600 mb-4">No payment cards found for this customer</p>
             )}

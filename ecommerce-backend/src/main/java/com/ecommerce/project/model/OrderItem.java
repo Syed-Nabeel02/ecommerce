@@ -1,3 +1,4 @@
+// OrderItem entity - represents a single product in an order
 package com.ecommerce.project.model;
 
 import jakarta.persistence.*;
@@ -6,70 +7,87 @@ import jakarta.persistence.*;
 @Table(name = "order_items")
 public class OrderItem {
 
+    // Unique ID for each order item
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderItemId;
 
+    // Product that was ordered
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 
+    // Order this item belongs to
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
 
-    private Integer quantity;
-    private double orderedProductPrice;
+    // Quantity ordered
+    private Integer qty;
+    // Price of product at time of order
+    private double ProductPrice;
 
+    // Default constructor
     public OrderItem() {
     }
 
-    public OrderItem(Long orderItemId, Product product, Order order, Integer quantity, double orderedProductPrice) {
+    // Constructor with all fields
+    public OrderItem(Long orderItemId, Product product, Order order, Integer qty, double ProductPrice) {
         this.orderItemId = orderItemId;
         this.product = product;
         this.order = order;
-        this.quantity = quantity;
-        this.orderedProductPrice = orderedProductPrice;
+        this.qty = qty;
+        this.ProductPrice = ProductPrice;
     }
 
+    // Get order item ID
     public Long getOrderItemId() {
         return orderItemId;
     }
 
+    // Set order item ID
     public void setOrderItemId(Long orderItemId) {
         this.orderItemId = orderItemId;
     }
 
+    // Get product
     public Product getProduct() {
         return product;
     }
 
+    // Set product
     public void setProduct(Product product) {
         this.product = product;
     }
 
+    // Get order
     public Order getOrder() {
         return order;
     }
 
+    // Set order
     public void setOrder(Order order) {
         this.order = order;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    // Get quantity
+    public Integer getQty() {
+        return qty;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    // Set quantity
+    public void setQty(Integer qty) {
+        this.qty = qty;
     }
 
-    public double getOrderedProductPrice() {
-        return orderedProductPrice;
+    // Get product price
+    public double getProductPrice() {
+        return ProductPrice;
     }
 
-    public void setOrderedProductPrice(double orderedProductPrice) {
-        this.orderedProductPrice = orderedProductPrice;
+    // Set product price
+    public void setProductPrice(double productPrice) {
+        this.ProductPrice = productPrice;
     }
 
 }

@@ -2,7 +2,7 @@ package com.ecommerce.project.service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -15,48 +15,52 @@ import org.springframework.web.multipart.MultipartFile;
 import com.ecommerce.project.DAO.CartDAO;
 import com.ecommerce.project.DAO.CategoryDAO;
 import com.ecommerce.project.DAO.ProductDAO;
-import com.ecommerce.project.DTO.CartDTO;
 import com.ecommerce.project.DTO.ProductDTO;
 import com.ecommerce.project.DTO.ProductResponse;
-import com.ecommerce.project.errorHandler.APIException;
+import com.ecommerce.project.errorHandler.APIErrorHandler;
 import com.ecommerce.project.errorHandler.ResourceNotFoundException;
 import com.ecommerce.project.helper.AuthHelper;
 import com.ecommerce.project.model.Cart;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.model.Product;
-import com.ecommerce.project.model.User;
 import com.ecommerce.project.service.Interface.ICartService;
 import com.ecommerce.project.service.Interface.FileService;
 import com.ecommerce.project.service.Interface.IProductService;
 
+/**
+ * Service implementation for product operations
+ * Business logic: Manages products with category association, image uploads,
+ * advanced search/filtering, and automatic cart updates when products change
+ */
 @Service
 public class IProductServiceImpl implements IProductService {
 
     private final CartDAO cartDAO;
     private final CategoryDAO categoryDAO;
     private final ProductDAO productDAO;
-    private final ModelMapper modelMapper;
-    private final FileService fileService;
-    private final AuthHelper authHelper;
-    private final ICartService cartService;
+    private final ModelMapper objectMapper;
+    private final FileService fileStorageService;
+    private final AuthHelper userAuthHelper;
+    private final ICartService shoppingCartService;
 
     @Value("${project.image}")
-    private String imagePath;
+    private String imageStoragePath;
 
     @Value("${image.base.url}")
-    private String imageBaseUrl;
+    private String imageResourcePath;
 
     public IProductServiceImpl(CartDAO cartDAO, CategoryDAO categoryDAO, ProductDAO productDAO,
-                               ModelMapper modelMapper, FileService fileService, AuthHelper authHelper, ICartService cartService) {
+                               ModelMapper objectMapper, FileService fileStorageService, AuthHelper userAuthHelper, ICartService shoppingCartService) {
         this.cartDAO = cartDAO;
         this.categoryDAO = categoryDAO;
         this.productDAO = productDAO;
-        this.modelMapper = modelMapper;
-        this.fileService = fileService;
-        this.authHelper = authHelper;
-        this.cartService = cartService;
+        this.objectMapper = objectMapper;
+        this.fileStorageService = fileStorageService;
+        this.userAuthHelper = userAuthHelper;
+        this.shoppingCartService = shoppingCartService;
     }
 
+    // Add new product to category (validates unique product name per category)
     @Override
     public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
         Category targetCategory = fetchCategoryOrThrowException(categoryId);
@@ -68,6 +72,7 @@ public class IProductServiceImpl implements IProductService {
         return convertEntityToDTO(persistedProduct);
     }
 
+    // Get all products with dynamic filters (keyword, category, model)
     @Override
     public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category, String model) {
         Sort sortingCriteria = buildSortCriteria(sortBy, sortOrder);
@@ -80,6 +85,7 @@ public class IProductServiceImpl implements IProductService {
         return buildProductResponse(paginatedProducts, productDataList);
     }
 
+    // Get all products for admin (no filters, just pagination)
     @Override
     public ProductResponse getAllProductsForAdmin(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortingCriteria = buildSortCriteria(sortBy, sortOrder);
@@ -90,7 +96,7 @@ public class IProductServiceImpl implements IProductService {
         return buildProductResponse(paginatedProducts, productDataList);
     }
 
-
+    // Search products within a specific category
     @Override
     public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Category targetCategory = fetchCategoryOrThrowException(categoryId);
@@ -106,6 +112,7 @@ public class IProductServiceImpl implements IProductService {
         return buildProductResponse(paginatedProducts, productDataList);
     }
 
+    // Search products by keyword in product name
     @Override
     public ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortingCriteria = buildSortCriteria(sortBy, sortOrder);
@@ -119,6 +126,7 @@ public class IProductServiceImpl implements IProductService {
         return buildProductResponse(paginatedProducts, productDataList);
     }
 
+    // Update product details and notify all affected carts
     @Override
     public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
         Product existingProductEntity = fetchProductOrThrowException(productId);
@@ -131,6 +139,7 @@ public class IProductServiceImpl implements IProductService {
         return convertEntityToDTO(persistedProduct);
     }
 
+    // Delete product and remove from all carts
     @Override
     public ProductDTO deleteProduct(Long productId) {
         Product productToDelete = fetchProductOrThrowException(productId);
@@ -142,11 +151,12 @@ public class IProductServiceImpl implements IProductService {
         return convertEntityToDTO(productToDelete);
     }
 
+    // Upload/update product image
     @Override
     public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
         Product existingProductEntity = fetchProductOrThrowException(productId);
 
-        String uploadedFileName = fileService.uploadImage(imagePath, image);
+        String uploadedFileName = fileStorageService.uploadImage(imageStoragePath, image);
         existingProductEntity.setImage(uploadedFileName);
 
         Product persistedProduct = productDAO.save(existingProductEntity);
@@ -168,27 +178,27 @@ public class IProductServiceImpl implements IProductService {
                 .anyMatch(product -> product.getProductName().equals(productName));
 
         if (productExists) {
-            throw new APIException("Product already exist!!");
+            throw new APIErrorHandler("This product already exists");
         }
     }
 
     private void validateProductsExist(List<Product> productList, String categoryName) {
         if (productList.isEmpty()) {
-            throw new APIException(categoryName + " category does not have any products");
+            throw new APIErrorHandler("No products found in the " + categoryName + " category");
         }
     }
 
     private void validateProductsExistForKeyword(List<Product> productList, String keyword) {
         if (productList.isEmpty()) {
-            throw new APIException("Products not found with keyword: " + keyword);
+            throw new APIErrorHandler("No products match your search: " + keyword);
         }
     }
 
     private Product createNewProductEntity(ProductDTO productDTO, Category targetCategory) {
-        Product newProductEntity = modelMapper.map(productDTO, Product.class);
+        Product newProductEntity = objectMapper.map(productDTO, Product.class);
         newProductEntity.setImage("default.png");
         newProductEntity.setCategory(targetCategory);
-        newProductEntity.setUser(authHelper.loggedInUser());
+        newProductEntity.setUser(userAuthHelper.loggedInUser());
 
         return newProductEntity;
     }
@@ -224,7 +234,7 @@ public class IProductServiceImpl implements IProductService {
     private List<ProductDTO> transformProductsToDTO(List<Product> products) {
         return products.stream()
                 .map(productEntity -> {
-                    ProductDTO productData = modelMapper.map(productEntity, ProductDTO.class);
+                    ProductDTO productData = objectMapper.map(productEntity, ProductDTO.class);
                     productData.setImage(constructImageUrl(productEntity.getImage()));
                     return productData;
                 })
@@ -232,7 +242,7 @@ public class IProductServiceImpl implements IProductService {
     }
 
     private ProductDTO convertEntityToDTO(Product product) {
-        return modelMapper.map(product, ProductDTO.class);
+        return objectMapper.map(product, ProductDTO.class);
     }
 
     private String constructImageUrl(String imageName) {
@@ -241,7 +251,7 @@ public class IProductServiceImpl implements IProductService {
             return imageName;
         }
         // Otherwise, construct URL for local/legacy images
-        return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
+        return imageResourcePath.endsWith("/") ? imageResourcePath + imageName : imageResourcePath + "/" + imageName;
     }
 
     private ProductResponse buildProductResponse(Page<Product> paginatedProducts, List<ProductDTO> productDataList) {
@@ -256,7 +266,7 @@ public class IProductServiceImpl implements IProductService {
     }
 
     private void updateProductDetails(Product existingProduct, ProductDTO productDTO) {
-        Product updatedProductData = modelMapper.map(productDTO, Product.class);
+        Product updatedProductData = objectMapper.map(productDTO, Product.class);
         existingProduct.setProductName(updatedProductData.getProductName());
         existingProduct.setDescription(updatedProductData.getDescription());
         existingProduct.setQuantity(updatedProductData.getQuantity());
@@ -264,10 +274,10 @@ public class IProductServiceImpl implements IProductService {
     }
 
     private void notifyCartsOfProductUpdate(List<Cart> affectedCarts, Long productId) {
-        affectedCarts.forEach(shoppingCart -> cartService.updateProductInCarts(shoppingCart.getCartId(), productId));
+        affectedCarts.forEach(shoppingCart -> shoppingCartService.updateProductInCarts(shoppingCart.getCartId(), productId));
     }
 
     private void removeProductFromAllCarts(List<Cart> affectedCarts, Long productId) {
-        affectedCarts.forEach(shoppingCart -> cartService.deleteProductFromCart(shoppingCart.getCartId(), productId));
+        affectedCarts.forEach(shoppingCart -> shoppingCartService.deleteProductFromCart(shoppingCart.getCartId(), productId));
     }
 }

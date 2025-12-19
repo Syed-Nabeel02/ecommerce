@@ -1,7 +1,6 @@
 /**
  * QuantityControl.jsx
  * Quantity selector with increment/decrement buttons.
- * Renamed from QuantitySelector for better clarity.
  */
 
 const btnStyles = 'border-[1.2px] border-slate-800 px-3 py-1 rounded-sm';

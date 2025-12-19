@@ -11,9 +11,9 @@ import { useForm } from 'react-hook-form';
 import { FaCreditCard } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { addUpdateUserPaymentCard } from '../../../../store/actions';
+import { addUpdateUserPaymentCard, addUpdateUserPaymentCardForCustomer } from '../../../../store/actions';
 
-const NewCardForm = ({ card, setOpenCardModal }) => {
+const NewCardForm = ({ card, setOpenCardModal, customerId, isAdminMode = false }) => {
   const dispatch = useDispatch();
   const { btnLoader } = useSelector((state) => state.errors);
   const {
@@ -27,7 +27,11 @@ const NewCardForm = ({ card, setOpenCardModal }) => {
   });
 
   const handleSaveCard = async (data) => {
-    dispatch(addUpdateUserPaymentCard(data, toast, card?.cardId, setOpenCardModal));
+    if (isAdminMode && customerId) {
+      dispatch(addUpdateUserPaymentCardForCustomer(customerId, data, toast, card?.cardId, setOpenCardModal));
+    } else {
+      dispatch(addUpdateUserPaymentCard(data, toast, card?.cardId, setOpenCardModal));
+    }
   };
 
   useEffect(() => {

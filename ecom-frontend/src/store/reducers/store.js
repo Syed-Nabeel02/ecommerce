@@ -18,7 +18,7 @@ const basketItems = localStorage.getItem("cartItems")
 
 const savedCheckoutAddress = localStorage.getItem("CHECKOUT_ADDRESS")
     ? JSON.parse(localStorage.getItem("CHECKOUT_ADDRESS"))
-    : [];
+    : null;
 
 const selectedPaymentCard = localStorage.getItem("CHECKOUT_PAYMENT_CARD")
     ? JSON.parse(localStorage.getItem("CHECKOUT_PAYMENT_CARD"))

@@ -33,6 +33,12 @@ import com.ecommerce.project.JwtAuth.jwt.AuthTokenFilter;
 import com.ecommerce.project.JwtAuth.jwt.JwtUtils;
 import com.ecommerce.project.JwtAuth.services.UserDetailsServiceImpl;
 
+/**
+ * Main security configuration class for JWT-based authentication.
+ * Sets up Spring Security with JWT tokens instead of sessions.
+ * Configures which endpoints require authentication and which are public.
+ * Also initializes default users (admin and regular user) on startup.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -48,6 +54,10 @@ public class WebSecurityConfig {
         this.jwtUtils = jwtUtils;
     }
 
+    /**
+     * Configures CORS to allow frontend apps to make requests.
+     * Allows localhost (for development) and production Netlify URL.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -67,11 +77,19 @@ public class WebSecurityConfig {
         return source;
     }
 
+    /**
+     * Creates the JWT authentication filter.
+     * This filter checks every request for a valid JWT token.
+     */
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter(jwtUtils, userDetailsService);
     }
 
+    /**
+     * Sets up authentication provider with user details service and password encoder.
+     * Used to verify username and password during login.
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -80,16 +98,27 @@ public class WebSecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Provides the authentication manager for login processing.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Creates a password encoder using BCrypt hashing algorithm.
+     * BCrypt is secure and automatically handles salting.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Main security filter chain configuration.
+     * Combines all security settings (authentication, filters, etc.).
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         configureSecurityDefaults(http);
@@ -98,6 +127,9 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+    /**
+     * Ignores security for API documentation endpoints.
+     */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
@@ -106,6 +138,10 @@ public class WebSecurityConfig {
                 "/webjars/**");
     }
 
+    /**
+     * Initializes default data on application startup.
+     * Creates default roles and users (admin and regular user) if they don't exist.
+     */
     @Bean
     public CommandLineRunner initData(RoleDAO roleDAO, UserDAO userDAO, PasswordEncoder passwordEncoder) {
         return args -> {
@@ -115,7 +151,7 @@ public class WebSecurityConfig {
             Set<Role> userRoles = Set.of(userRole);
             Set<Role> adminRoles = Set.of(userRole, adminRole);
 
-            createOrUpdateUser(userDAO, passwordEncoder, "user1", "user1@example.com", "pass1", userRoles);
+            createOrUpdateUser(userDAO, passwordEncoder, "user1", "user1@example.com", "user1Pass", userRoles);
             createOrUpdateUser(userDAO, passwordEncoder, "admin", "admin@example.com", "adminPass", adminRoles);
         };
     }
@@ -129,12 +165,22 @@ public class WebSecurityConfig {
     }
 
     private void configureAuthorizationRules(org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
-        auth.requestMatchers("/api/auth/**").permitAll()
+        auth
+                .requestMatchers("/api/admin/**", "/api/auth/admin/**").hasRole("ADMIN")
+
+                // Public authentication endpoints
+                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+
+                // All other /api/**
+                .requestMatchers("/api/**").permitAll()
+
+
+                // Static resources
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/images/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // All other endpoints require authentication
                 .anyRequest().authenticated();
     }
 

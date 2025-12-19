@@ -1,10 +1,33 @@
+/**
+ * ProductCard.jsx
+ * Product card component displaying product info with add to cart and quick view features.
+ * Shows product image, name, price, stock status, and action buttons.
+ */
+
+// React hooks for state management
 import { useState } from 'react';
+// Icons for shopping cart and eye (quick view)
 import { FaShoppingCart, FaEye } from 'react-icons/fa';
+// Modal for viewing product details
 import ProductQuickView from '../modals/ProductQuickView';
+// Redux hook to dispatch actions
 import { useDispatch } from 'react-redux';
+// Redux action to add product to cart
 import { addItemToCart } from '../../../store/actions';
+// Toast notifications for user feedback
 import toast from 'react-hot-toast';
 
+/**
+ * ProductCard Component
+ * @param {number} productId - Unique product identifier
+ * @param {string} productName - Name of the product
+ * @param {string} model - Product model number
+ * @param {string} image - Product image URL
+ * @param {string} description - Product description
+ * @param {number} quantity - Available stock quantity
+ * @param {number} price - Product price
+ * @param {boolean} about - If true, hides action buttons (for about/info pages)
+ */
 const ProductCard = ({
         productId,
         productName,
@@ -15,13 +38,18 @@ const ProductCard = ({
         price,
         about = false,
 }) => {
+    // Track whether quick view modal is open
     const [openProductViewModal, setOpenProductViewModal] = useState(false);
+    // Track if mouse is hovering over card (for quick view overlay)
     const [isHovered, setIsHovered] = useState(false);
     const btnLoader = false;
+    // Store selected product data for quick view modal
     const [selectedViewProduct, setSelectedViewProduct] = useState("");
+    // Check if product is in stock
     const isAvailable = quantity && Number(quantity) > 0;
     const dispatch = useDispatch();
 
+    // Open quick view modal with product details
     const handleProductView = (product) => {
         if (!about) {
             setSelectedViewProduct(product);
@@ -30,6 +58,7 @@ const ProductCard = ({
         }
     };
 
+    // Add product to shopping cart
     const addToCartHandler = (cartItems) => {
         dispatch(addItemToCart(cartItems, 1, toast));
     };
@@ -140,29 +169,31 @@ const ProductCard = ({
                         </div>
 
                         {/* Add to Cart Button */}
-                        <button
-                            disabled={!isAvailable || btnLoader}
-                            onClick={() =>
-                                addToCartHandler({
-                                    image,
-                                    productName,
-                                    description,
-                                    price,
-                                    productId,
-                                    quantity,
-                                })
-                            }
-                            className={`${
-                                isAvailable
-                                    ? "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900"
-                                    : "bg-gray-300 cursor-not-allowed"
-                            } text-white py-2 px-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg`}
-                        >
-                            <FaShoppingCart className="text-base" />
-                            <span className="hidden sm:inline text-sm">
-                                {isAvailable ? "Add" : "Unavailable"}
-                            </span>
-                        </button>
+                       <button
+                           disabled={!isAvailable || btnLoader}
+                           onClick={() =>
+                               addToCartHandler({
+                                   image,
+                                   productName,
+                                   description,
+                                   price,
+                                   productId,
+                                   quantity,
+                               })
+                           }
+                           className={`${
+                               isAvailable
+                                   ? "bg-red-600 hover:bg-red-700"
+                                   : "bg-gray-300 cursor-not-allowed"
+                           } text-white py-3 px-4 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg text-base`}
+                       >
+                           <FaShoppingCart className="text-lg" />
+                           <span className="hidden sm:inline">
+                               {isAvailable ? "Add" : "Unavailable"}
+                           </span>
+                       </button>
+
+
                     </div>
                 )}
             </div>

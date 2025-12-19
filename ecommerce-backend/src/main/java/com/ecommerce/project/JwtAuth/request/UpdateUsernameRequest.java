@@ -3,6 +3,10 @@ package com.ecommerce.project.JwtAuth.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Request DTO for updating a username.
+ * Validates that new username is between 3-20 characters.
+ */
 public class UpdateUsernameRequest {
 
     @NotBlank(message = "Username is required")

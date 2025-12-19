@@ -1,28 +1,33 @@
 package com.ecommerce.project.JwtAuth.jwt;
 
-import java.security.Key;
-import java.util.Date;
-
-import javax.crypto.SecretKey;
-
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
-import org.springframework.stereotype.Component;
-import org.springframework.web.util.WebUtils;
-
-import com.ecommerce.project.JwtAuth.services.UserDetailsImpl;
-
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.WebUtils;
 
+import com.ecommerce.project.JwtAuth.services.UserDetailsImpl;
+
+import javax.crypto.SecretKey;
+import java.security.Key;
+import java.util.Date;
+
+/**
+ * Utility class for JWT (JSON Web Token) operations.
+ * Handles token generation, validation, and extraction from requests.
+ * JWT tokens are used for stateless authentication (no sessions needed).
+ */
 @Component
 public class JwtUtils {
 
@@ -32,39 +37,64 @@ public class JwtUtils {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final int JWT_COOKIE_MAX_AGE = 24 * 60 * 60;
     private static final String API_PATH = "/api";
-    private static final String ERROR_INVALID_JWT = "Invalid JWT token: {}";
-    private static final String ERROR_EXPIRED_JWT = "JWT token is expired: {}";
-    private static final String ERROR_UNSUPPORTED_JWT = "JWT token is unsupported: {}";
-    private static final String ERROR_EMPTY_JWT = "JWT claims string is empty: {}";
 
     @Value("${spring.app.jwtSecret}")
-    private String jwtSecret;
+    private final String jwtSecret;
 
     @Value("${spring.app.jwtExpirationMs}")
-    private int jwtExpirationMs;
+    private final int jwtExpirationMs;
 
     @Value("${spring.ecom.app.jwtCookieName}")
-    private String jwtCookieName;
+    private final String jwtCookieName;
 
+    private final MessageSource messageSource;
+
+    public JwtUtils(MessageSource messageSource) {
+        this.messageSource = messageSource;
+        this.jwtSecret = null;
+        this.jwtExpirationMs = 0;
+        this.jwtCookieName = null;
+    }
+
+    /**
+     * Extracts JWT token from cookies.
+     * Cookies are one way to send JWT tokens from frontend to backend.
+     */
     public String getJwtFromCookies(HttpServletRequest request) {
         Cookie jwtCookie = WebUtils.getCookie(request, jwtCookieName);
         return extractCookieValue(jwtCookie);
     }
 
+    /**
+     * Extracts JWT token from Authorization header.
+     * Most common way to send JWT: "Authorization: Bearer <token>"
+     */
     public String getJwtFromHeader(HttpServletRequest request) {
         String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
         return extractJwtFromBearerToken(authorizationHeader);
     }
 
+    /**
+     * Generates a JWT cookie for a logged-in user.
+     * Used after successful login to send token back to frontend.
+     */
     public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
         String jwtToken = generateTokenFromUsername(userPrincipal.getUsername());
         return buildJwtCookie(jwtToken);
     }
 
+    /**
+     * Creates an empty cookie to clear the JWT (for logout).
+     */
     public ResponseCookie getCleanJwtCookie() {
         return buildCleanCookie();
     }
 
+    /**
+     * Generates a new JWT token for a username.
+     * Token contains: username, issue time, expiration time.
+     * Signed with secret key to prevent tampering.
+     */
     public String generateTokenFromUsername(String username) {
         Date currentDate = new Date();
         Date expirationDate = new Date(currentDate.getTime() + jwtExpirationMs);
@@ -77,6 +107,10 @@ public class JwtUtils {
                 .compact();
     }
 
+    /**
+     * Extracts the username from a JWT token.
+     * Used to identify who is making the request.
+     */
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
                 .verifyWith((SecretKey) getSigningKey())
@@ -86,6 +120,10 @@ public class JwtUtils {
                 .getSubject();
     }
 
+    /**
+     * Validates a JWT token (checks signature, expiration, format).
+     * Returns true if token is valid, false otherwise.
+     */
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser()
@@ -94,13 +132,13 @@ public class JwtUtils {
                     .parseSignedClaims(authToken);
             return true;
         } catch (MalformedJwtException exception) {
-            logTokenValidationError(ERROR_INVALID_JWT, exception);
+            logTokenValidationError("jwt.error.invalid", exception);
         } catch (ExpiredJwtException exception) {
-            logTokenValidationError(ERROR_EXPIRED_JWT, exception);
+            logTokenValidationError("jwt.error.expired", exception);
         } catch (UnsupportedJwtException exception) {
-            logTokenValidationError(ERROR_UNSUPPORTED_JWT, exception);
+            logTokenValidationError("jwt.error.unsupported", exception);
         } catch (IllegalArgumentException exception) {
-            logTokenValidationError(ERROR_EMPTY_JWT, exception);
+            logTokenValidationError("jwt.error.empty", exception);
         }
         return false;
     }
@@ -136,7 +174,13 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(decodedKey);
     }
 
-    private void logTokenValidationError(String errorMessage, Exception exception) {
-        logger.error(errorMessage, exception.getMessage());
+    private void logTokenValidationError(String messageKey, Exception exception) {
+        String message = messageSource.getMessage(
+                messageKey,
+                new Object[]{exception.getMessage()},
+                exception.getMessage(),
+                LocaleContextHolder.getLocale()
+        );
+        logger.error(message);
     }
 }

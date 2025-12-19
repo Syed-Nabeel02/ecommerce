@@ -10,26 +10,31 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.project.DAO.CategoryDAO;
-import com.ecommerce.project.DTO.CategoryDTO;
+import com.ecommerce.project.DTO.CategoryDto;
 import com.ecommerce.project.DTO.CategoryResponse;
-import com.ecommerce.project.errorHandler.APIException;
+import com.ecommerce.project.errorHandler.APIErrorHandler;
 import com.ecommerce.project.errorHandler.ResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import com.ecommerce.project.service.Interface.ICategoryService;
 
+/**
+ * Service implementation for category operations
+ * Business logic: Manages product categories with validation for unique names
+ */
 @Service
 public class ICategoryServiceImpl implements ICategoryService {
 
     private final CategoryDAO categoryDAO;
-    private final ModelMapper modelMapper;
+    private final ModelMapper objectMapper;
 
-    public ICategoryServiceImpl(CategoryDAO categoryDAO, ModelMapper modelMapper) {
+    public ICategoryServiceImpl(CategoryDAO categoryDAO, ModelMapper objectMapper) {
         this.categoryDAO = categoryDAO;
-        this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
     }
 
+    // Get all categories with pagination and sorting
     @Override
-    public CategoryResponse getAllCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+    public CategoryResponse getCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortingCriteria = buildSortCriteria(sortBy, sortOrder);
         Pageable paginationDetails = PageRequest.of(pageNumber, pageSize, sortingCriteria);
         Page<Category> paginatedCategories = categoryDAO.findAll(paginationDetails);
@@ -37,12 +42,13 @@ public class ICategoryServiceImpl implements ICategoryService {
         List<Category> categoriesList = paginatedCategories.getContent();
         validateCategoriesExist(categoriesList);
 
-        List<CategoryDTO> categoryDataList = transformCategoriesToDTO(categoriesList);
+        List<CategoryDto> categoryDataList = transformCategoriesToDTO(categoriesList);
         return buildCategoryResponse(paginatedCategories, categoryDataList);
     }
 
+    // Create new category (validates name is unique)
     @Override
-    public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+    public CategoryDto createCategory(CategoryDto categoryDTO) {
         Category newCategoryEntity = convertDTOToEntity(categoryDTO);
         validateCategoryNameNotExists(newCategoryEntity.getCategoryName());
 
@@ -50,15 +56,17 @@ public class ICategoryServiceImpl implements ICategoryService {
         return convertEntityToDTO(persistedCategory);
     }
 
+    // Delete a category by ID
     @Override
-    public CategoryDTO deleteCategory(Long categoryId) {
+    public CategoryDto removeCategory(Long categoryId) {
         Category categoryToDelete = fetchCategoryOrThrowException(categoryId);
         categoryDAO.delete(categoryToDelete);
         return convertEntityToDTO(categoryToDelete);
     }
 
+    // Update existing category details
     @Override
-    public CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryId) {
+    public CategoryDto updateCategory(CategoryDto categoryDTO, Long categoryId) {
         Category existingCategory = fetchCategoryOrThrowException(categoryId);
         Category updatedCategoryData = convertDTOToEntity(categoryDTO);
         updatedCategoryData.setCategoryId(categoryId);
@@ -75,17 +83,17 @@ public class ICategoryServiceImpl implements ICategoryService {
 
     private void validateCategoriesExist(List<Category> categoriesList) {
         if (categoriesList.isEmpty()) {
-            throw new APIException("No category created till now.");
+            throw new APIErrorHandler("No categories have been created yet");
         }
     }
 
-    private List<CategoryDTO> transformCategoriesToDTO(List<Category> categories) {
+    private List<CategoryDto> transformCategoriesToDTO(List<Category> categories) {
         return categories.stream()
                 .map(this::convertEntityToDTO)
                 .toList();
     }
 
-    private CategoryResponse buildCategoryResponse(Page<Category> paginatedCategories, List<CategoryDTO> categoryDataList) {
+    private CategoryResponse buildCategoryResponse(Page<Category> paginatedCategories, List<CategoryDto> categoryDataList) {
         CategoryResponse responsePayload = new CategoryResponse();
         responsePayload.setContent(categoryDataList);
         responsePayload.setPageNumber(paginatedCategories.getNumber());
@@ -96,18 +104,18 @@ public class ICategoryServiceImpl implements ICategoryService {
         return responsePayload;
     }
 
-    private Category convertDTOToEntity(CategoryDTO categoryDTO) {
-        return modelMapper.map(categoryDTO, Category.class);
+    private Category convertDTOToEntity(CategoryDto categoryDTO) {
+        return objectMapper.map(categoryDTO, Category.class);
     }
 
-    private CategoryDTO convertEntityToDTO(Category category) {
-        return modelMapper.map(category, CategoryDTO.class);
+    private CategoryDto convertEntityToDTO(Category category) {
+        return objectMapper.map(category, CategoryDto.class);
     }
 
     private void validateCategoryNameNotExists(String categoryName) {
         Category existingCategoryInDb = categoryDAO.findByCategoryName(categoryName);
         if (existingCategoryInDb != null) {
-            throw new APIException("Category with the name " + categoryName + " already exists !!!");
+            throw new APIErrorHandler("A category named " + categoryName + " already exists");
         }
     }
 

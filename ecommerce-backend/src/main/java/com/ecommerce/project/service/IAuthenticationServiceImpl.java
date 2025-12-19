@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 
 import com.ecommerce.project.DAO.RoleDAO;
 import com.ecommerce.project.DAO.UserDAO;
-import com.ecommerce.project.DTO.AddressDTO;
+import com.ecommerce.project.DTO.AddressDto;
 import com.ecommerce.project.DTO.AuthenticationResult;
 import com.ecommerce.project.DTO.PaymentCardDTO;
 import com.ecommerce.project.DTO.UserDTO;
@@ -40,6 +40,11 @@ import com.ecommerce.project.service.Interface.IAddrService;
 import com.ecommerce.project.service.Interface.IAuthenticationService;
 import com.ecommerce.project.service.Interface.IPaymentCardService;
 
+/**
+ * Service implementation for authentication operations
+ * Business logic: Handles user registration with optional address/payment info,
+ * JWT-based authentication, session management, and profile updates
+ */
 @Service
 @Transactional
 public class IAuthenticationServiceImpl implements IAuthenticationService {
@@ -49,23 +54,24 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
     private final UserDAO userDAO;
     private final RoleDAO roleDAO;
     private final PasswordEncoder encoder;
-    private final ModelMapper modelMapper;
+    private final ModelMapper objectMapper;
     private final IAddrService addressService;
     private final IPaymentCardService paymentCardService;
 
     public IAuthenticationServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils,
-                                      UserDAO userDAO, RoleDAO roleDAO, PasswordEncoder encoder, ModelMapper modelMapper,
+                                      UserDAO userDAO, RoleDAO roleDAO, PasswordEncoder encoder, ModelMapper objectMapper,
                                       IAddrService addressService, IPaymentCardService paymentCardService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userDAO = userDAO;
         this.roleDAO = roleDAO;
         this.encoder = encoder;
-        this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
         this.addressService = addressService;
         this.paymentCardService = paymentCardService;
     }
 
+    // Authenticate user credentials and generate JWT token
     @Override
     public AuthenticationResult login(LoginRequest loginRequest) {
         Authentication authenticationResult = authenticateUserCredentials(loginRequest);
@@ -80,14 +86,15 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
         return new AuthenticationResult(userInfo, sessionCookie);
     }
 
+    // Register new user with optional address and payment card
     @Override
     public ResponseEntity<MessageResponse> register(SignupRequest signUpRequest) {
         if (userDAO.existsByUserName(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
+            return ResponseEntity.badRequest().body(new MessageResponse("This username has already been registered"));
         }
 
         if (userDAO.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+            return ResponseEntity.badRequest().body(new MessageResponse("This email address is already registered"));
         }
 
         User newAccount = createNewUserAccount(signUpRequest);
@@ -96,9 +103,10 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
         processOptionalAddressData(signUpRequest, persistedUser);
         processOptionalPaymentCardData(signUpRequest, persistedUser);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.ok(new MessageResponse("Account created successfully!"));
     }
 
+    // Get current user's profile information
     @Override
     public UserInfoResponse getCurrentUserDetails(Authentication authentication) {
         UserDetailsImpl currentUserDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -106,11 +114,13 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
         return buildUserInfoResponseWithoutToken(currentUserDetails, userAuthorities);
     }
 
+    // Clear JWT cookie to logout user
     @Override
     public ResponseCookie logoutUser() {
         return jwtUtils.getCleanJwtCookie();
     }
 
+    // Get all users with ROLE_USER (customers) with pagination
     @Override
     public UserResponse getAllCustomers(Pageable pageable) {
         Page<User> customerPage = userDAO.findByRoleName(AppRole.ROLE_USER, pageable);
@@ -118,6 +128,7 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
         return buildUserResponseData(customerPage, customerDataList);
     }
 
+    // Update username for current user (validates uniqueness)
     @Override
     public ResponseEntity<MessageResponse> updateUsername(UpdateUsernameRequest request, Authentication authentication) {
         String currentlyLoggedInUsername = authentication.getName();
@@ -126,13 +137,13 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
         if (!existingUser.getUserName().equals(request.getUsername()) &&
                 userDAO.existsByUserName(request.getUsername())) {
             return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+                    .body(new MessageResponse("This username has already been registered"));
         }
 
         existingUser.setUserName(request.getUsername());
         userDAO.save(existingUser);
 
-        return ResponseEntity.ok(new MessageResponse("Username updated successfully!"));
+        return ResponseEntity.ok(new MessageResponse("Your username has been changed successfully!"));
     }
 
     private Authentication authenticateUserCredentials(LoginRequest loginRequest) {
@@ -172,7 +183,7 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
 
         if (requestedRoles == null) {
             Role defaultRole = roleDAO.findByRoleName(AppRole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseThrow(() -> new RuntimeException("The requested role could not be found"));
             assignedRoles.add(defaultRole);
         } else {
             requestedRoles.forEach(roleName -> {
@@ -187,21 +198,21 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
     private Role resolvRoleByName(String roleName) {
         if ("admin".equals(roleName)) {
             return roleDAO.findByRoleName(AppRole.ROLE_ADMIN)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseThrow(() -> new RuntimeException("The requested role could not be found"));
         }
         return roleDAO.findByRoleName(AppRole.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                .orElseThrow(() -> new RuntimeException("The requested role could not be found"));
     }
 
     private void processOptionalAddressData(SignupRequest signUpRequest, User persistedUser) {
         if (signUpRequest.getStreet() != null && !signUpRequest.getStreet().isEmpty()) {
-            AddressDTO userAddressDTO = buildAddressDTO(signUpRequest);
-            addressService.newAddress(userAddressDTO, persistedUser);
+            AddressDto userAddressDto = buildAddressDTO(signUpRequest);
+            addressService.newAddr(userAddressDto, persistedUser);
         }
     }
 
-    private AddressDTO buildAddressDTO(SignupRequest signUpRequest) {
-        AddressDTO addressDTO = new AddressDTO();
+    private AddressDto buildAddressDTO(SignupRequest signUpRequest) {
+        AddressDto addressDTO = new AddressDto();
         addressDTO.setStreet(signUpRequest.getStreet());
         addressDTO.setBuildingName(signUpRequest.getBuildingName());
         addressDTO.setCity(signUpRequest.getCity());
@@ -231,7 +242,7 @@ public class IAuthenticationServiceImpl implements IAuthenticationService {
 
     private List<UserDTO> transformCustomersToDTO(Page<User> customerPage) {
         return customerPage.getContent().stream()
-                .map(customerEntity -> modelMapper.map(customerEntity, UserDTO.class))
+                .map(customerEntity -> objectMapper.map(customerEntity, UserDTO.class))
                 .collect(Collectors.toList());
     }
 

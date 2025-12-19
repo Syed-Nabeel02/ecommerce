@@ -7,9 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import AddressList from '../../CheckoutPage/components/ShippingAddress/AddressList';
 import ConfirmDeleteDialog from '../../../components/ui/modals/ConfirmDeleteDialog';
 import toast from 'react-hot-toast';
-import { removeUserAddress } from '../../../store/actions';
+import { removeUserAddress, removeUserAddressForCustomer } from '../../../store/actions';
 
-const AddressInfo = ({ address }) => {
+const AddressInfo = ({ address, customerId, isAdminMode = false }) => {
     const [openAddressModal, setOpenAddressModal] = useState(false);
     const [openConfirmDeleteDialog, setOpenConfirmDeleteDialog] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState("");
@@ -21,11 +21,20 @@ const AddressInfo = ({ address }) => {
     const dispatch = useDispatch();
 
     const deleteAddressHandler = () => {
-        dispatch(removeUserAddress(
-            toast,
-            selectedAddress?.addressId,
-            setOpenConfirmDeleteDialog
-        ))
+        if (isAdminMode && customerId) {
+            dispatch(removeUserAddressForCustomer(
+                customerId,
+                toast,
+                selectedAddress?.addressId,
+                setOpenConfirmDeleteDialog
+            ));
+        } else {
+            dispatch(removeUserAddress(
+                toast,
+                selectedAddress?.addressId,
+                setOpenConfirmDeleteDialog
+            ));
+        }
     };
 
     const noAddressExist = !address || address.length === 0;
@@ -80,9 +89,12 @@ const AddressInfo = ({ address }) => {
         <AddressInfoModal
             open={openAddressModal}
             setOpen={setOpenAddressModal}>
-                <AddAddressForm 
+                <AddAddressForm
                     address={selectedAddress}
-                    setOpenAddressModal={setOpenAddressModal}/>
+                    setOpenAddressModal={setOpenAddressModal}
+                    customerId={customerId}
+                    isAdminMode={isAdminMode}
+                />
         </AddressInfoModal>
 
         <ConfirmDeleteDialog 

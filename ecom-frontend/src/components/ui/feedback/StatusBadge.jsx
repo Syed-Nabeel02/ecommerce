@@ -1,9 +1,16 @@
 /**
  * StatusBadge.jsx
- * Status badge component with icon.
- * Renamed from Status for better clarity.
+ * Reusable badge component for displaying status with icon (e.g., order status, payment status).
+ * Customizable background color and text color.
  */
 
+/**
+ * StatusBadge Component
+ * @param {string} text - Status text to display
+ * @param {Component} icon - React icon component to display
+ * @param {string} bg - Tailwind background color class
+ * @param {string} color - Tailwind text color class
+ */
 const StatusBadge = ({text, icon:Icon, bg, color}) => {
     return (
         <div

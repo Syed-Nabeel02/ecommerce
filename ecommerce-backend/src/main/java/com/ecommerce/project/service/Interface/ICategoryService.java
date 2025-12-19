@@ -1,13 +1,22 @@
 package com.ecommerce.project.service.Interface;
 
-import com.ecommerce.project.DTO.CategoryDTO;
+import com.ecommerce.project.DTO.CategoryDto;
 import com.ecommerce.project.DTO.CategoryResponse;
 
+/**
+ * Service interface for category operations
+ * Handles product category CRUD operations
+ */
 public interface ICategoryService {
-    CategoryResponse getAllCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
-    CategoryDTO createCategory(CategoryDTO categoryDTO);
+    // Get all categories with pagination and sorting
+    CategoryResponse getCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 
-    CategoryDTO deleteCategory(Long categoryId);
+    // Create a new category (validates name uniqueness)
+    CategoryDto createCategory(CategoryDto categoryDTO);
 
-    CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryId);
+    // Delete a category by ID
+    CategoryDto removeCategory(Long categoryId);
+
+    // Update an existing category
+    CategoryDto updateCategory(CategoryDto categoryDTO, Long categoryId);
 }

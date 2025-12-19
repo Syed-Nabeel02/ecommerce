@@ -1,22 +1,36 @@
 /**
  * SidebarNav.jsx
- * Sidebar navigation component for admin and profile pages.
- * Renamed from Sidebar for better clarity.
+ * Sidebar navigation for admin dashboard pages.
+ * Displays navigation links with icons and highlights the current page.
  */
 
+// React core library
 import React from 'react';
+// Dashboard icon for sidebar header
 import { FaTachometerAlt } from 'react-icons/fa';
+// Redux hook to access current user
 import { useSelector } from 'react-redux';
+// React Router for navigation links and current URL
 import { Link, useLocation } from 'react-router-dom';
+// Navigation configuration (list of admin pages)
 import { adminNavigation } from '../../../utilities/navigationConfig';
+// Utility for conditional CSS classes
 import classNames from 'classnames';
 
+/**
+ * SidebarNav Component
+ * @param {boolean} isProfileLayout - Whether this sidebar is for profile (not currently used)
+ */
 const SidebarNav = ({isProfileLayout = false}) => {
+    // Get current URL path to highlight active link
     const pathName = useLocation().pathname;
+    // Get logged in user info
     const { currentUser } = useSelector((state) => state.authentication);
 
+    // Check if user has admin role
     const isAdmin = currentUser && currentUser?.roles?.includes("ROLE_ADMIN");
 
+    // Use admin navigation links
     const sideBarLayout = adminNavigation;
     
   return (

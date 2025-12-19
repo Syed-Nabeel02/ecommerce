@@ -1,42 +1,15 @@
-/**
- * AddCategoryForm.jsx
- *
- * Form component for creating new categories or updating existing ones in the admin dashboard.
- * Simpler than AddProductForm - only requires category name field.
- *
- * USED IN:
- * - CategoryManagementView (Admin dashboard)
- *
- * KEY FEATURES:
- * - Dual mode: Create new categories or update existing ones
- * - Single field form (category name only)
- * - Form validation using react-hook-form
- * - Auto-population when editing
- *
- * DEPENDENCIES:
- * - react-hook-form (form validation and state management)
- * - react-hot-toast (success/error notifications)
- *
- * @param {Function} setOpen - Callback to close the modal
- * @param {boolean} open - Loading state (used to disable buttons)
- * @param {Object} category - Category data when in update mode
- * @param {boolean} update - Flag indicating edit mode vs create mode
- */
-
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
-
+import TextInput from "../../../../components/ui/forms/TextInput";
 import {
   addNewCategoryDashboard,
   modifyDashboardCategory,
 } from "../../../../store/actions";
-import TextInput from "../../../../components/ui/forms/TextInput";
 
 const AddCategoryForm = ({ setOpen, open, category, update = false, navigate, pathname }) => {
   const dispatch = useDispatch();
-
   const {
     register,
     handleSubmit,
@@ -47,65 +20,54 @@ const AddCategoryForm = ({ setOpen, open, category, update = false, navigate, pa
     mode: "onTouched",
   });
 
-  /**
-   * Handle form submission for creating or updating a category
-   * - CREATE mode: Dispatch action to add new category
-   * - UPDATE mode: Dispatch action to modify existing category using category.id
-   */
-  const addNewCategoryHandler = (data) => {
+  const handleCategorySubmit = (formData) => {
     if (!update) {
-      // CREATE MODE: Add new category to the database
-      dispatch(addNewCategoryDashboard(data, setOpen, reset, toast));
+      dispatch(addNewCategoryDashboard(formData, setOpen, reset, toast));
     } else {
-      // UPDATE MODE: Modify existing category identified by category.id
       dispatch(
-        modifyDashboardCategory(data, setOpen, category.id, reset, toast, navigate, pathname)
+        modifyDashboardCategory(formData, setOpen, category.id, reset, toast, navigate, pathname)
       );
     }
   };
 
-  // EFFECT: Pre-populate category name field when editing
-  // This runs when component loads in UPDATE mode
   useEffect(() => {
-    if (update && category) {
-      setValue("categoryName", category?.categoryName);
+    if (update && category?.categoryName) {
+      setValue("categoryName", category.categoryName);
     }
-  }, [update, category]);
+  }, [update, category, setValue]);
+
+  const closeModal = () => setOpen(false);
+  const submitButtonLabel = open ? "Loading..." : update ? "Update" : "Save";
 
   return (
-    <div className="py-5 relative h-full ">
-      <form
-        className="space-y-4 "
-        onSubmit={handleSubmit(addNewCategoryHandler)}
-      >
-        <div className="flex md:flex-row flex-col gap-4 w-full ">
-          <TextInput
-            label="Category Name"
-            required
-            id="categoryName"
-            type="text"
-            message="This field is required*"
-            placeholder="Category Name"
-            register={register}
-            errors={errors}
-          />
-        </div>
+    <div className="py-6 relative h-full">
+      <form className="space-y-6" onSubmit={handleSubmit(handleCategorySubmit)}>
+        <TextInput
+          label="Category Name"
+          required
+          id="categoryName"
+          type="text"
+          message="This field is required*"
+          placeholder="Enter category name"
+          register={register}
+          errors={errors}
+        />
 
-        <div className="flex  w-full justify-between items-center absolute bottom-14">
+        <div className="flex w-full justify-between items-center absolute bottom-6 left-0 right-0 px-8">
           <button
             disabled={open}
-            onClick={() => setOpen(false)}
+            onClick={closeModal}
             type="button"
-            className={`border border-borderColor rounded-[5px] font-metropolis  text-textColor py-[10px] px-4 text-sm font-medium`}
+            className="border border-gray-300 rounded-lg font-medium text-gray-700 py-2 px-6 text-sm hover:bg-gray-50 transition-colors duration-200"
           >
             Cancel
           </button>
           <button
             disabled={open}
             type="submit"
-            className={`font-metropolis rounded-[5px]  bg-custom-blue hover:bg-blue-800 text-white  py-[10px] px-4 text-sm font-medium`}
+            className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg font-medium py-2 px-6 text-sm transition-colors duration-200"
           >
-            {open ? "Loading.." : update ? "Update" : "Save"}
+            {submitButtonLabel}
           </button>
         </div>
       </form>

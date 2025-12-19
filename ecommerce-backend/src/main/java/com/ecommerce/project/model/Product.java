@@ -19,7 +19,7 @@ public class Product {
 
     // Product name (min 3 characters)
     @NotBlank
-    @Size(min = 3, message = "Product name must contain atleast 3 characters")
+    @Size(min = 3, message = " must contain atleast 3 characters")
     private String productName;
 
     // Product model/variant
@@ -30,7 +30,7 @@ public class Product {
 
     // Product description (min 6 characters)
     @NotBlank
-    @Size(min = 6, message = "Product description must contain atleast 6 characters")
+    @Size(min = 6, message = "must contain atleast 6 characters")
     private String description;
 
     // Available stock quantity

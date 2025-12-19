@@ -1,7 +1,6 @@
 /**
  * SavedCardInfo.jsx
  * Displays saved payment cards and allows selection, edit, delete operations.
- * Renamed from PaymentCardInfo for better clarity.
  */
 
 import React, { useState } from 'react';

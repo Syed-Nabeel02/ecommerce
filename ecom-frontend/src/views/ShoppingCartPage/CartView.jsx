@@ -2,9 +2,10 @@
  * CartView.jsx
  * Shopping cart page displaying cart items with checkout functionality.
  * Shows empty state if no items, otherwise displays cart items and totals.
+ * Redesigned with modern red gradient theme and improved visual hierarchy.
  */
 
-import { MdArrowBack, MdShoppingCart } from 'react-icons/md';
+import { MdArrowBack, MdShoppingCart, MdDelete } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import CartItemRow from './components/CartItemRow';
@@ -27,60 +28,125 @@ const CartView = () => {
     if (!items || items.length === 0) return <EmptyCartState />;
 
     return (
-        <div className="lg:px-14 sm:px-8 px-4 py-10">
-            {/* Page header */}
-            <div className="flex flex-col items-center mb-12">
-                <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
-                  <MdShoppingCart size={36} className="text-gray-700" />
-                    Your Cart
-                </h1>
-                <p className="text-lg text-gray-600 mt-2">All your selected items</p>
-            </div>
+        <div className="min-h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
+            <div className="container mx-auto max-w-7xl">
 
-            {/* Table header */}
-            <div className="grid md:grid-cols-5 grid-cols-4 gap-4 pb-2 font-semibold items-center">
-                <div className="md:col-span-2 justify-self-start text-lg text-slate-800 lg:ps-4">
-                    Product
+                {/* Page Header */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-red-600 p-2 rounded-lg">
+                            <MdShoppingCart size={32} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-bold text-slate-800">Shopping Cart</h1>
+                            <p className="text-slate-600 text-sm mt-1">Review and manage your items</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="justify-self-center text-lg text-slate-800">Price</div>
-                <div className="justify-self-center text-lg text-slate-800">Quantity</div>
-                <div className="justify-self-center text-lg text-slate-800">Total</div>
-            </div>
 
-            {/* Cart items list */}
-            <div>
-                {items && items.length > 0 &&
-                    items.map((item, i) => <CartItemRow key={i} {...item}/>)}
-            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            {/* Cart summary and checkout */}
-            <div className="border-t-[1.5px] border-slate-200 py-4 flex sm:flex-row sm:px-0 px-2 flex-col sm:justify-between gap-4">
-                <div></div>
-                <div className="flex text-sm gap-1 flex-col">
-                    <div className="flex justify-between w-full md:text-lg text-sm font-semibold">
-                        <span>Subtotal</span>
-                        <span>${Number(cartSummary?.totalPrice).toFixed(2)}</span>
+                    {/* Left Column - Cart Items */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+
+                            {/* Table Header */}
+                            <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+                                <div className="grid md:grid-cols-5 grid-cols-4 gap-4 font-semibold text-white">
+                                    <div className="md:col-span-2 text-sm">Product</div>
+                                    <div className="text-center text-sm">Price</div>
+                                    <div className="text-center text-sm">Quantity</div>
+                                    <div className="text-center text-sm">Total</div>
+                                </div>
+                            </div>
+
+                            {/* Cart Items List */}
+                            <div className="divide-y divide-slate-200">
+                                {items && items.length > 0 &&
+                                    items.map((item, i) => (
+                                        <CartItemRow key={i} {...item}/>
+                                    ))}
+                            </div>
+
+                            {/* Empty State Message */}
+                            {(!items || items.length === 0) && (
+                                <div className="p-8 text-center">
+                                    <p className="text-slate-600 font-medium">No items in your cart</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Continue Shopping Link */}
+                        <Link
+                            to="/products"
+                            className="flex gap-2 items-center mt-4 text-red-600 hover:text-red-700 font-semibold transition-colors"
+                        >
+                            <MdArrowBack size={20} />
+                            <span>Continue Shopping</span>
+                        </Link>
                     </div>
 
-                    <p className="text-slate-500">
-                        Taxes and shipping calculated at checkout
-                    </p>
+                    {/* Right Column - Order Summary */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-24">
 
-                    {/* Checkout button */}
-                    <div className="w-full flex justify-end">
-                        <button
-                            onClick={() => dispatch(syncCartForCheckout(navigate, toast))}
-                            className="font-semibold w-[300px] py-2 px-4 rounded-xs bg-custom-blue text-white flex items-center justify-center gap-2 hover:text-gray-300 transition duration-500">
-                            <MdShoppingCart size={20} />
-                            Checkout
-                        </button>
+                            {/* Summary Header */}
+                            <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+                                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                                    <MdShoppingCart size={24} />
+                                    Order Summary
+                                </h2>
+                            </div>
+
+                            {/* Summary Content */}
+                            <div className="p-6 space-y-6">
+
+                                {/* Items Count */}
+                                <div className="flex justify-between items-center pb-4 border-b border-slate-200">
+                                    <span className="text-slate-700 font-medium">Items ({items?.length || 0})</span>
+                                    <span className="text-lg font-semibold text-slate-800">
+                                        ${Number(cartSummary?.totalPrice).toFixed(2)}
+                                    </span>
+                                </div>
+
+                                {/* Pricing Breakdown */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm text-slate-600">
+                                        <span>Subtotal</span>
+                                        <span>${Number(cartSummary?.totalPrice).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-slate-600">
+                                        <span>Taxes & Shipping</span>
+                                        <span className="text-slate-500 text-xs">Calculated at checkout</span>
+                                    </div>
+                                </div>
+
+                                {/* Total */}
+                                <div className="border-t border-slate-200 pt-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg font-bold text-slate-800">Total</span>
+                                        <span className="text-2xl font-bold text-red-600">
+                                            ${Number(cartSummary?.totalPrice).toFixed(2)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Checkout Button */}
+                                <button
+                                    onClick={() => dispatch(syncCartForCheckout(navigate, toast))}
+                                    className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-6"
+                                >
+                                    <MdShoppingCart size={20} />
+                                    Proceed to Checkout
+                                </button>
+
+
+
+
+
+                            </div>
+                        </div>
                     </div>
-
-                    {/* Continue shopping link */}
-                    <Link className="flex gap-2 items-center mt-2 text-slate-500" to="/products">
-                        <MdArrowBack />
-                        <span>Continue Shopping</span>
-                    </Link>
                 </div>
             </div>
         </div>

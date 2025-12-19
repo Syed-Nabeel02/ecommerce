@@ -1,50 +1,20 @@
 /**
  * BaseModal.jsx
- *
- * DESCRIPTION:
- * A reusable base modal component for displaying content in a slide-out panel.
- * This modal slides in from the right side of the screen and includes a backdrop overlay.
- *
- * USED IN:
- * - Product form dialogs
- * - Category form dialogs
- * - Address and payment forms
- * - Any component that needs to display content in a modal
- *
- * KEY FEATURES:
- * - Slides in from the right side of screen
- * - Dark backdrop overlay when open
- * - Close button with X icon
- * - Smooth animations (500ms transition)
- * - Scrollable content area
- * - Responsive design (adjusts width on mobile)
- *
- * DEPENDENCIES:
- * - @headlessui/react (accessible modal components with built-in animations)
- * - react-icons/rx (RxCross1 icon for close button)
+ * Reusable slide-in modal component that appears from the right side.
+ * Used for forms and detailed content views throughout the app.
  */
 
+// Headless UI components for accessible modal dialogs
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+// Close icon for modal header
 import { RxCross1 } from 'react-icons/rx';
 
 /**
  * BaseModal Component
- *
- * @param {boolean} open - Controls whether the modal is visible
- * @param {function} setOpen - Function to update the open state (typically sets to false to close)
+ * @param {boolean} open - Controls modal visibility
+ * @param {function} setOpen - Function to close the modal
  * @param {ReactNode} children - Content to display inside the modal
- * @param {string} title - Title text displayed at the top of the modal (default: empty string)
- *
- * @example
- * const [isModalOpen, setIsModalOpen] = useState(false);
- *
- * <BaseModal
- *   open={isModalOpen}
- *   setOpen={setIsModalOpen}
- *   title="Add New Product"
- * >
- *   <ProductForm />
- * </BaseModal>
+ * @param {string} title - Modal title displayed in header
  */
 function BaseModal({ open, setOpen, children, title = "" }) {
   return (
@@ -88,16 +58,19 @@ function BaseModal({ open, setOpen, children, title = "" }) {
 
                     {/* Title bar with close button */}
                     {/* border-b creates bottom border, pb-8 adds padding below */}
-                    <div className='border-b pb-8 flex justify-between'>
+                    <div className='border-b border-red-200 pb-8 flex justify-between'>
 
                       {/* Modal title text */}
-                      <h1 className='font-montserrat font-bold text-slate-800 text-2xl pt-4'>
+                      <h1 className='font-montserrat font-bold text-red-600 text-2xl pt-4'>
                         {title}
                       </h1>
 
                       {/* Close button - clicking sets open to false */}
-                      <button onClick={() => setOpen(false)}>
-                        <RxCross1 className='text-slate-800 text-2xl'/>
+                      <button
+                        onClick={() => setOpen(false)}
+                        className='text-red-600 hover:text-red-700 transition-colors duration-200'
+                      >
+                        <RxCross1 className='text-2xl'/>
                       </button>
                     </div>
 
@@ -113,6 +86,5 @@ function BaseModal({ open, setOpen, children, title = "" }) {
     </>
   )
 }
-
 
 export default BaseModal;

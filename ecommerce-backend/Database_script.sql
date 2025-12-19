@@ -100,3 +100,21 @@ INSERT INTO products (product_id, product_name, model, description, price, quant
 
 ON CONFLICT (product_id) DO NOTHING;
 
+-- ==========================================
+-- RESET SEQUENCES TO CORRECT VALUES
+-- ==========================================
+-- This is CRITICAL! Since we inserted with explicit IDs, we must reset the sequences
+-- Otherwise, the next insert will try to use ID 1, 2, 3, etc. which already exist
+
+-- Use pg_get_serial_sequence to find the correct sequence name automatically
+SELECT setval(pg_get_serial_sequence('categories', 'category_id'), (SELECT MAX(category_id) FROM categories));
+SELECT setval(pg_get_serial_sequence('products', 'product_id'), (SELECT MAX(product_id) FROM products));
+
+-- Reset other sequences that might be affected
+SELECT setval(pg_get_serial_sequence('users', 'user_id'), (SELECT COALESCE(MAX(user_id), 1) FROM users));
+SELECT setval(pg_get_serial_sequence('addresses', 'address_id'), (SELECT COALESCE(MAX(address_id), 1) FROM addresses));
+SELECT setval(pg_get_serial_sequence('payment_cards', 'card_id'), (SELECT COALESCE(MAX(card_id), 1) FROM payment_cards));
+SELECT setval(pg_get_serial_sequence('orders', 'order_id'), (SELECT COALESCE(MAX(order_id), 1) FROM orders));
+SELECT setval(pg_get_serial_sequence('cart_item', 'cart_item_id'), (SELECT COALESCE(MAX(cart_item_id), 1) FROM cart_item));
+SELECT setval(pg_get_serial_sequence('carts', 'cart_id'), (SELECT COALESCE(MAX(cart_id), 1) FROM carts));
+

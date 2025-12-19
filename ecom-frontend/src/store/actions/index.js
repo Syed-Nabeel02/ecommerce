@@ -3,7 +3,7 @@ import api from "../../api/api"
 export const loadCatalogItems = (queryString = "") => async (dispatch) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        const { data } = await api.get(`/public/products${queryString ? `?${queryString}` : ""}`);
+        const { data } = await api.get(`/products${queryString ? `?${queryString}` : ""}`);
         dispatch({
             type: "LOAD_CATALOG_ITEMS",
             payload: data.content,
@@ -27,7 +27,7 @@ export const loadCatalogItems = (queryString = "") => async (dispatch) => {
 export const loadCategoryList = () => async (dispatch) => {
     try {
         dispatch({ type: "CATEGORY_LOADER" });
-        const { data } = await api.get(`/public/categories`);
+        const { data } = await api.get(`/categories`);
         dispatch({
             type: "LOAD_CATEGORY_LIST",
             payload: data.content,
@@ -62,11 +62,11 @@ export const addItemToCart = (data, qty = 1, toast) =>
         // If in stock -> add
         if (isQuantityExist) {
             dispatch({ type: "ADD_ITEM_TO_CART", payload: {...data, quantity: qty}});
-            toast.success(`${data?.productName} added to the cart`);
+            toast.success(`${data?.productName} has been added to your cart`);
             localStorage.setItem("cartItems", JSON.stringify(getState().cart.items));
         } else {
             // error
-            toast.error("Out of stock");
+            toast.error("Item is currently out of stock");
         }
 };
 
@@ -106,7 +106,7 @@ export const increaseCartItemQuantity =
             });
             localStorage.setItem("cartItems", JSON.stringify(getState().cart.items));
         } else {
-            toast.error("Quantity Reached to Limit");
+            toast.error("Maximum quantity limit reached");
         }
 
     };
@@ -124,7 +124,7 @@ export const decreaseCartItemQuantity =
 
 export const removeItemFromCart =  (data, toast) => (dispatch, getState) => {
     dispatch({type: "REMOVE_ITEM_FROM_CART", payload: data });
-    toast.success(`${data.productName} removed from cart`);
+    toast.success(`${data.productName} has been removed from your cart`);
     localStorage.setItem("cartItems", JSON.stringify(getState().cart.items));
 }
 
@@ -133,7 +133,7 @@ export const authenticateUserLogin
     = (sendData, toast, reset, navigate, setLoader) => async (dispatch) => {
         try {
             setLoader(true);
-            const { data } = await api.post("/auth/signin", sendData);
+            const { data } = await api.post("/auth/login", sendData);
             dispatch({ type: "AUTHENTICATE_USER", payload: data });
             localStorage.setItem("auth", JSON.stringify(data));
             reset();
@@ -141,11 +141,11 @@ export const authenticateUserLogin
             // Fetch user's cart from backend after login
             await dispatch(loadUserCartData());
 
-            toast.success("Login Success");
+            toast.success("Successfully logged in");
             navigate("/");
         } catch (error) {
             console.log(error);
-            toast.error(error?.response?.data?.message || "Internal Server Error");
+            toast.error(error?.response?.data?.message || "An unexpected error occurred");
         } finally {
             setLoader(false);
         }
@@ -156,13 +156,13 @@ export const registerNewUser
     = (sendData, toast, reset, navigate, setLoader) => async (dispatch) => {
         try {
             setLoader(true);
-            const { data } = await api.post("/auth/signup", sendData);
+            const { data } = await api.post("/auth/register", sendData);
             reset();
-            toast.success(data?.message || "User Registered Successfully");
+            toast.success(data?.message || "Registration completed successfully");
             navigate("/login");
         } catch (error) {
             console.log(error);
-            toast.error(error?.response?.data?.message || error?.response?.data?.password || "Internal Server Error");
+            toast.error(error?.response?.data?.message || error?.response?.data?.password || "Registration failed");
         } finally {
             setLoader(false);
         }
@@ -171,7 +171,7 @@ export const registerNewUser
 export const updateUserDisplayName = (username, toast, setIsEditing) => async (dispatch, getState) => {
     try {
         dispatch({ type: "BUTTON_LOADER" });
-        const { data } = await api.put("/auth/user/username", { username });
+        const { data } = await api.put("/auth/profile/username", { username });
 
         // Update user in Redux state
         const { currentUser } = getState().authentication;
@@ -181,7 +181,7 @@ export const updateUserDisplayName = (username, toast, setIsEditing) => async (d
         // Update localStorage
         localStorage.setItem("auth", JSON.stringify(updatedUser));
 
-        toast.success(data?.message || "Username updated successfully");
+        toast.success(data?.message || "Your username has been updated");
         setIsEditing(false);
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
@@ -201,7 +201,7 @@ export const performUserLogout = (navigate) => async (dispatch, getState) => {
                 productId: item.productId,
                 quantity: item.quantity
             }));
-            await api.post('/cart/create', cartItems);
+            await api.post('/cart/sync', cartItems);
         }
 
         dispatch({ type: "USER_LOGOUT" });
@@ -238,11 +238,13 @@ export const saveUserAddressData =
     try {
         if (!addressId) {
             const { data } = await api.post("/addresses", sendData);
+            // Auto-select the newly created address
+            dispatch(setCheckoutDeliveryAddress(data));
         } else {
             await api.put(`/addresses/${addressId}`, sendData);
         }
         dispatch(fetchUserAddressList());
-        toast.success("Address saved successfully");
+        toast.success("Address has been saved successfully");
         dispatch({ type:"IS_SUCCESS" });
     } catch (error) {
         console.log(error);
@@ -262,7 +264,7 @@ export const removeUserAddress =
         dispatch({ type: "IS_SUCCESS" });
         dispatch(fetchUserAddressList());
         dispatch(resetCheckoutAddress());
-        toast.success("Address deleted successfully");
+        toast.success("Address has been deleted successfully");
     } catch (error) {
         console.log(error);
         dispatch({
@@ -283,7 +285,7 @@ export const resetCheckoutAddress = () => {
 export const fetchUserAddressList = () => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        const { data } = await api.get(`/users/addresses`);
+        const { data } = await api.get(`/addresses`);
         dispatch({type: "LOAD_USER_ADDRESSES", payload: data});
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
@@ -315,7 +317,7 @@ export const addPaymentMethod = (method) => {
 // Payment Card Actions
 export const getUserPaymentCards = () => async (dispatch, getState) => {
     try {
-        const { data } = await api.get(`/users/payment-cards`);
+        const { data } = await api.get(`/payment-methods`);
         dispatch({ type: "USER_PAYMENT_CARDS", payload: data || [] });
     } catch (error) {
         console.log(error);
@@ -328,12 +330,15 @@ export const addUpdateUserPaymentCard =
     dispatch({ type: "BUTTON_LOADER" });
     try {
         if (!cardId) {
-            await api.post("/payment-cards", sendData);
+            const { data } = await api.post("/payment-methods", sendData);
+            // Auto-select the newly created card
+            dispatch(selectPaymentCard(data));
+            dispatch(selectPaymentMethod("SAVED_CARD"));
         } else {
-            await api.put(`/payment-cards/${cardId}`, sendData);
+            await api.put(`/payment-methods/${cardId}`, sendData);
         }
         dispatch(getUserPaymentCards());
-        toast.success("Payment card saved successfully");
+        toast.success("Payment card has been saved successfully");
         dispatch({ type: "IS_SUCCESS" });
         setOpenCardModal(false);
     } catch (error) {
@@ -350,11 +355,11 @@ export const deleteUserPaymentCard =
     (toast, cardId, setOpenDeleteModal) => async (dispatch, getState) => {
     try {
         dispatch({ type: "BUTTON_LOADER" });
-        await api.delete(`/payment-cards/${cardId}`);
+        await api.delete(`/payment-methods/${cardId}`);
         dispatch({ type: "IS_SUCCESS" });
         dispatch(getUserPaymentCards());
         dispatch(clearPaymentSelection());
-        toast.success("Payment card deleted successfully");
+        toast.success("Payment card has been deleted successfully");
     } catch (error) {
         console.log(error);
         dispatch({
@@ -368,9 +373,9 @@ export const deleteUserPaymentCard =
 
 export const setDefaultPaymentCard = (cardId, toast) => async (dispatch) => {
     try {
-        await api.put(`/payment-cards/${cardId}/set-default`);
+        await api.put(`/payment-methods/${cardId}/default`);
         dispatch(getUserPaymentCards());
-        toast.success("Default card updated");
+        toast.success("Default card has been updated");
     } catch (error) {
         console.log(error);
         toast.error(error?.response?.data?.message || "Failed to set default card");
@@ -410,7 +415,7 @@ export const clearPaymentSelection = () => {
 export const initializeUserCart = (sendCartItems) => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        await api.post('/cart/create', sendCartItems);
+        await api.post('/cart/sync', sendCartItems);
         await dispatch(loadUserCartData());
     } catch (error) {
         console.log(error);
@@ -425,7 +430,7 @@ export const initializeUserCart = (sendCartItems) => async (dispatch, getState) 
 export const loadUserCartData = () => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        const { data } = await api.get('/carts/users/cart');
+        const { data } = await api.get('/cart');
 
         dispatch({
             type: "LOAD_USER_CART_ITEMS",
@@ -465,14 +470,14 @@ export const syncCartForCheckout = (navigate, toast) => async (dispatch, getStat
 
         // Check if user is logged in
         if (!currentUser) {
-            toast.error("Please login to proceed to checkout");
+            toast.error("Please log in to proceed with checkout");
             navigate("/login");
             return;
         }
 
         // Check if cart is empty
         if (!items || items.length === 0) {
-            toast.error("Your cart is empty");
+            toast.error("Your shopping cart is empty");
             return;
         }
 
@@ -485,7 +490,7 @@ export const syncCartForCheckout = (navigate, toast) => async (dispatch, getStat
         }));
 
         // Sync cart to backend
-        await api.post('/cart/create', cartItems);
+        await api.post('/cart/sync', cartItems);
 
         // Fetch the updated cart from backend to ensure sync
         await dispatch(loadUserCartData());
@@ -506,7 +511,7 @@ export const submitUserOrder
     = (sendData, navigate, toast) => async (dispatch, getState) => {
         try {
             dispatch({ type: "IS_FETCHING" });
-            const response = await api.post("/order/users/place-order", sendData);
+            const response = await api.post("/orders", sendData);
             if (response.data) {
                 localStorage.removeItem("CHECKOUT_ADDRESS");
                 localStorage.removeItem("CHECKOUT_PAYMENT_CARD");
@@ -514,7 +519,7 @@ export const submitUserOrder
                 dispatch({ type: "RESET_PAYMENT_DATA"});
                 dispatch({ type: "EMPTY_CART"});
                 dispatch({ type: "CLEAR_PAYMENT_SELECTION" });
-                toast.success("Order placed successfully!");
+                toast.success("Your order has been placed successfully!");
                 navigate("/order-confirm");
             }
             dispatch({ type: "IS_SUCCESS" });
@@ -528,7 +533,7 @@ export const submitUserOrder
 export const analyticsAction = () => async (dispatch, getState) => {
         try {
             dispatch({ type: "IS_FETCHING"});
-            const { data } = await api.get('/admin/app/analytics');
+            const { data } = await api.get('/admin/analytics');
             dispatch({
                 type: "FETCH_ANALYTICS",
                 payload: data,
@@ -572,7 +577,7 @@ export const updateOrderStatusFromDashboard =
     try {
         setLoader(true);
         const { data } = await api.put(`/admin/orders/${orderId}/status`, { status: orderStatus});
-        toast.success(data.message || "Order updated successfully");
+        toast.success(data.message || "Order has been updated successfully");
         // Navigate back to page 1 after updating
         if (navigate && pathname) {
             navigate(pathname);
@@ -591,7 +596,7 @@ export const getUserOrders = (pageNumber = 0, pageSize = 10) => async (dispatch)
     try {
         dispatch({ type: "IS_FETCHING" });
         const { data } = await api.get(
-            `/orders/users?pageNumber=${pageNumber}&pageSize=${pageSize}&sortBy=orderId&sortOrder=desc`
+            `/orders?pageNumber=${pageNumber}&pageSize=${pageSize}&sortBy=orderId&sortOrder=desc`
         );
         dispatch({
             type: "GET_USER_ORDERS",
@@ -642,7 +647,7 @@ export const modifyDashboardProduct =
     try {
         setLoader(true);
         await api.put(`/admin/products/${sendData.id}`, sendData);
-        toast.success("Product update successful");
+        toast.success("Product has been updated successfully");
         reset();
         setLoader(false);
         setOpen(false);
@@ -663,10 +668,10 @@ export const createDashboardProduct =
     (sendData, toast, reset, setLoader, setOpen) => async(dispatch, getState) => {
         try {
             setLoader(true);
-            await api.post(`/admin/categories/${sendData.categoryId}/product`,
+            await api.post(`/admin/categories/${sendData.categoryId}/products`,
                 sendData
             );
-            toast.success("Product created successfully");
+            toast.success("Product has been created successfully");
             reset();
             setOpen(false);
             await dispatch(loadDashboardCatalog());
@@ -683,7 +688,7 @@ export const removeCatalogItem =
     try {
         setLoader(true)
         await api.delete(`/admin/products/${productId}`);
-        toast.success("Product deleted successfully");
+        toast.success("Product has been deleted successfully");
         setLoader(false);
         setOpenDeleteModal(false);
         // Navigate back to page 1 after deleting
@@ -705,7 +710,7 @@ export const uploadProductImageDashboard =
     try {
         setLoader(true);
         await api.put(`/admin/products/${productId}/image`, formData);
-        toast.success("Image upload successful");
+        toast.success("Image has been uploaded successfully");
         setLoader(false);
         setOpen(false);
         await dispatch(loadDashboardCatalog());
@@ -718,7 +723,7 @@ export const uploadProductImageDashboard =
 export const fetchAllDashboardCategories = (queryString) => async (dispatch) => {
   dispatch({ type: "CATEGORY_LOADER" });
   try {
-    const { data } = await api.get(`/public/categories?${queryString}`);
+    const { data } = await api.get(`/categories?${queryString}`);
     dispatch({
       type: "LOAD_CATEGORY_LIST",
       payload: data["content"],
@@ -747,7 +752,7 @@ export const addNewCategoryDashboard =
       await api.post("/admin/categories", sendData);
       dispatch({ type: "CATEGORY_SUCCESS" });
       reset();
-      toast.success("Category Created Successful");
+      toast.success("Category has been created successfully");
       setOpen(false);
       await dispatch(fetchAllDashboardCategories());
     } catch (err) {
@@ -774,7 +779,7 @@ export const modifyDashboardCategory =
       dispatch({ type: "CATEGORY_SUCCESS" });
 
       reset();
-      toast.success("Category Update Successful");
+      toast.success("Category has been updated successfully");
       setOpen(false);
       // Navigate back to page 1 after updating
       if (navigate && pathname) {
@@ -803,7 +808,7 @@ export const removeDashboardCategory =
 
       dispatch({ type: "CATEGORY_SUCCESS" });
 
-      toast.success("Category Delete Successful");
+      toast.success("Category has been deleted successfully");
       setOpen(false);
       // Navigate back to page 1 after deleting
       if (navigate && pathname) {
@@ -825,7 +830,7 @@ export const removeDashboardCategory =
 export const getAllCustomersDashboard = (queryString) => async (dispatch) => {
   try {
     dispatch({ type: "IS_FETCHING" });
-    const { data } = await api.get(`/auth/customers?${queryString}`);
+    const { data } = await api.get(`/auth/admin/users?${queryString}`);
     dispatch({
       type: "GET_CUSTOMERS",
       payload: data["content"],
@@ -850,9 +855,9 @@ export const getCustomerDetails = (userId) => async (dispatch) => {
 
     // Fetch addresses, payment cards, and orders in parallel
     const [addressesRes, cardsRes, ordersRes] = await Promise.all([
-      api.get(`/admin/addresses/user/${userId}`),
-      api.get(`/admin/payment-cards/user/${userId}`),
-      api.get(`/admin/orders/user/${userId}?pageNumber=0&pageSize=10&sortBy=orderId&sortOrder=desc`)
+      api.get(`/admin/users/${userId}/addresses`),
+      api.get(`/admin/users/${userId}/payment-methods`),
+      api.get(`/admin/users/${userId}/orders?pageNumber=0&pageSize=10&sortBy=orderId&sortOrder=desc`)
     ]);
 
     dispatch({
@@ -869,5 +874,91 @@ export const getCustomerDetails = (userId) => async (dispatch) => {
       type: "IS_ERROR",
       payload: err?.response?.data?.message || "Failed to fetch customer details",
     });
+  }
+};
+
+// Admin: Save address for a specific customer
+export const saveUserAddressDataForCustomer =
+    (userId, sendData, toast, addressId, setOpenAddressModal) => async (dispatch, getState) => {
+  dispatch({ type:"BUTTON_LOADER" });
+  try {
+    if (!addressId) {
+      await api.post(`/admin/users/${userId}/addresses`, sendData);
+    } else {
+      await api.put(`/admin/users/${userId}/addresses/${addressId}`, sendData);
+    }
+    dispatch(getCustomerDetails(userId));
+    toast.success("Address has been saved successfully");
+    dispatch({ type:"IS_SUCCESS" });
+  } catch (error) {
+    console.log(error);
+    toast.error(error?.response?.data?.message || "Internal Server Error");
+    dispatch({ type:"IS_ERROR", payload: null });
+  } finally {
+    setOpenAddressModal(false);
+  }
+};
+
+// Admin: Remove address for a specific customer
+export const removeUserAddressForCustomer =
+    (userId, toast, addressId, setOpenDeleteModal) => async (dispatch, getState) => {
+  try {
+    dispatch({ type: "BUTTON_LOADER" });
+    await api.delete(`/admin/users/${userId}/addresses/${addressId}`);
+    dispatch({ type: "IS_SUCCESS" });
+    dispatch(getCustomerDetails(userId));
+    toast.success("Address has been deleted successfully");
+  } catch (error) {
+    console.log(error);
+    dispatch({
+      type: "IS_ERROR",
+      payload: error?.response?.data?.message || "Some Error Occurred",
+    });
+  } finally {
+    setOpenDeleteModal(false);
+  }
+};
+
+// Admin: Add or update payment card for a specific customer
+export const addUpdateUserPaymentCardForCustomer =
+    (userId, sendData, toast, cardId, setOpenCardModal) => async (dispatch, getState) => {
+  dispatch({ type: "BUTTON_LOADER" });
+  try {
+    if (!cardId) {
+      await api.post(`/admin/users/${userId}/payment-methods`, sendData);
+    } else {
+      await api.put(`/admin/users/${userId}/payment-methods/${cardId}`, sendData);
+    }
+    dispatch(getCustomerDetails(userId));
+    toast.success("Payment card has been saved successfully");
+    dispatch({ type: "IS_SUCCESS" });
+    setOpenCardModal(false);
+  } catch (error) {
+    console.log(error);
+    const errorMessage = error?.response?.status === 401
+        ? "You are not authorized. Please log in again."
+        : error?.response?.data?.message || "Failed to save payment card. Please check your details.";
+    toast.error(errorMessage);
+    dispatch({ type: "IS_ERROR", payload: null });
+  }
+};
+
+// Admin: Delete payment card for a specific customer
+export const deleteUserPaymentCardForCustomer =
+    (userId, toast, cardId, setOpenDeleteModal) => async (dispatch, getState) => {
+  try {
+    dispatch({ type: "BUTTON_LOADER" });
+    await api.delete(`/admin/users/${userId}/payment-methods/${cardId}`);
+    dispatch({ type: "IS_SUCCESS" });
+    dispatch(getCustomerDetails(userId));
+    toast.success("Payment card has been deleted successfully");
+  } catch (error) {
+    console.log(error);
+    dispatch({
+      type: "IS_ERROR",
+      payload: error?.response?.data?.message || "Some Error Occurred",
+    });
+  } finally {
+    setOpenDeleteModal(false);
   }
 };

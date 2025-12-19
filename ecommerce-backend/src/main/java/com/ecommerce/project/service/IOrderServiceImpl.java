@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ecommerce.project.model.*;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -19,20 +20,13 @@ import com.ecommerce.project.DAO.OrderItemDAO;
 import com.ecommerce.project.DAO.PaymentDAO;
 import com.ecommerce.project.DAO.ProductDAO;
 import com.ecommerce.project.DAO.UserDAO;
-import com.ecommerce.project.DTO.OrderDTO;
-import com.ecommerce.project.DTO.OrderItemDTO;
+import com.ecommerce.project.DTO.OrderDto;
+import com.ecommerce.project.DTO.OrderItemDto;
 import com.ecommerce.project.DTO.OrderResponse;
-import com.ecommerce.project.errorHandler.APIException;
+import com.ecommerce.project.errorHandler.APIErrorHandler;
 import com.ecommerce.project.errorHandler.ResourceNotFoundException;
 import com.ecommerce.project.helper.AuthHelper;
 import com.ecommerce.project.model.Address;
-import com.ecommerce.project.model.Cart;
-import com.ecommerce.project.model.CartItem;
-import com.ecommerce.project.model.Order;
-import com.ecommerce.project.model.OrderItem;
-import com.ecommerce.project.model.Payment;
-import com.ecommerce.project.model.Product;
-import com.ecommerce.project.model.User;
 import com.ecommerce.project.service.Interface.ICartService;
 import com.ecommerce.project.service.Interface.IOrderService;
 
@@ -47,13 +41,13 @@ public class IOrderServiceImpl implements IOrderService {
     private final PaymentDAO paymentDAO;
     private final ProductDAO productDAO;
     private final UserDAO userDAO;
-    private final ModelMapper modelMapper;
-    private final ICartService cartService;
-    private final AuthHelper authHelper;
+    private final ModelMapper objectMapper;
+    private final ICartService shoppingCartService;
+    private final AuthHelper userAuthHelper;
 
     public IOrderServiceImpl(CartDAO cartDAO, AddressDAO addressDAO, OrderItemDAO orderItemDAO,
                              OrderDAO orderDAO, PaymentDAO paymentDAO, ProductDAO productDAO, UserDAO userDAO,
-                             ModelMapper modelMapper, ICartService cartService, AuthHelper authHelper) {
+                             ModelMapper objectMapper, ICartService shoppingCartService, AuthHelper userAuthHelper) {
         this.cartDAO = cartDAO;
         this.addressDAO = addressDAO;
         this.orderItemDAO = orderItemDAO;
@@ -61,13 +55,13 @@ public class IOrderServiceImpl implements IOrderService {
         this.paymentDAO = paymentDAO;
         this.productDAO = productDAO;
         this.userDAO = userDAO;
-        this.modelMapper = modelMapper;
-        this.cartService = cartService;
-        this.authHelper = authHelper;
+        this.objectMapper = objectMapper;
+        this.shoppingCartService = shoppingCartService;
+        this.userAuthHelper = userAuthHelper;
     }
 
     @Override
-    public OrderDTO placeOrder(String emailId, Long addressId, String paymentMethod, String pgName,
+    public OrderDto placeOrder(String emailId, Long addressId, String paymentMethod, String pgName,
                                String pgPaymentId, String pgStatus, String pgResponseMessage) {
         Cart userShoppingCart = fetchCartByEmailOrThrowException(emailId);
         Address deliveryAddress = fetchAddressByIdOrThrowException(addressId);
@@ -95,12 +89,12 @@ public class IOrderServiceImpl implements IOrderService {
         Pageable paginationDetails = PageRequest.of(pageNumber, pageSize, sortingCriteria);
         Page<Order> paginatedOrders = orderDAO.findAll(paginationDetails);
 
-        List<OrderDTO> orderDataList = transformOrdersToDTO(paginatedOrders.getContent());
+        List<OrderDto> orderDataList = transformOrdersToDTO(paginatedOrders.getContent());
         return buildOrderResponse(paginatedOrders, orderDataList);
     }
 
     @Override
-    public OrderDTO updateOrder(Long orderId, String status) {
+    public OrderDto orderUpdate(Long orderId, String status) {
         Order existingOrder = fetchOrderByIdOrThrowException(orderId);
         existingOrder.setOrderStatus(status);
         orderDAO.save(existingOrder);
@@ -113,7 +107,7 @@ public class IOrderServiceImpl implements IOrderService {
         Pageable paginationDetails = PageRequest.of(pageNumber, pageSize, sortingCriteria);
         Page<Order> paginatedOrders = orderDAO.fetchOrdersByUserEmail(emailId, paginationDetails);
 
-        List<OrderDTO> orderDataList = transformOrdersToDTO(paginatedOrders.getContent());
+        List<OrderDto> orderDataList = transformOrdersToDTO(paginatedOrders.getContent());
         return buildOrderResponse(paginatedOrders, orderDataList);
     }
 
@@ -124,7 +118,7 @@ public class IOrderServiceImpl implements IOrderService {
         Pageable paginationDetails = PageRequest.of(pageNumber, pageSize, sortingCriteria);
 
         Page<Order> paginatedOrders = orderDAO.fetchOrdersByUserEmail(accountUser.getEmail(), paginationDetails);
-        List<OrderDTO> orderDataList = transformOrdersToDTO(paginatedOrders.getContent());
+        List<OrderDto> orderDataList = transformOrdersToDTO(paginatedOrders.getContent());
 
         return buildOrderResponse(paginatedOrders, orderDataList);
     }
@@ -161,7 +155,7 @@ public class IOrderServiceImpl implements IOrderService {
 
     private void validateCartNotEmpty(List<CartItem> cartItems) {
         if (cartItems.isEmpty()) {
-            throw new APIException("Cart is empty");
+            throw new APIErrorHandler("Your cart is empty");
         }
     }
 
@@ -170,8 +164,8 @@ public class IOrderServiceImpl implements IOrderService {
         for (CartItem cartElement : cartItems) {
             OrderItem purchaseItem = new OrderItem();
             purchaseItem.setProduct(cartElement.getProduct());
-            purchaseItem.setQuantity(cartElement.getQuantity());
-            purchaseItem.setOrderedProductPrice(cartElement.getProductPrice());
+            purchaseItem.setQty(cartElement.getQty());
+            purchaseItem.setProductPrice(cartElement.getProductPrice());
             purchaseItem.setOrder(order);
             purchasedItems.add(purchaseItem);
         }
@@ -180,11 +174,11 @@ public class IOrderServiceImpl implements IOrderService {
 
     private void processInventoryAndClearCart(List<CartItem> cartItems, Long cartId) {
         for (CartItem cartEntry : cartItems) {
-            int purchaseQuantity = cartEntry.getQuantity();
+            int purchaseQuantity = cartEntry.getQty();
             Product inventoryProduct = cartEntry.getProduct();
 
             reduceProductInventory(inventoryProduct, purchaseQuantity);
-            cartService.deleteProductFromCart(cartId, cartEntry.getProduct().getProductId());
+            shoppingCartService.deleteProductFromCart(cartId, cartEntry.getProduct().getProductId());
         }
     }
 
@@ -193,10 +187,10 @@ public class IOrderServiceImpl implements IOrderService {
         productDAO.save(product);
     }
 
-    private OrderDTO buildOrderDTOResponse(Order persistedOrder, List<OrderItem> purchasedItems, Long addressId) {
-        OrderDTO orderDataTransfer = convertEntityToDTO(persistedOrder);
+    private OrderDto buildOrderDTOResponse(Order persistedOrder, List<OrderItem> purchasedItems, Long addressId) {
+        OrderDto orderDataTransfer = convertEntityToDTO(persistedOrder);
         purchasedItems.forEach(orderEntry -> orderDataTransfer.getOrderItems()
-                .add(modelMapper.map(orderEntry, OrderItemDTO.class)));
+                .add(objectMapper.map(orderEntry, OrderItemDto.class)));
         orderDataTransfer.setAddressId(addressId);
         return orderDataTransfer;
     }
@@ -207,17 +201,17 @@ public class IOrderServiceImpl implements IOrderService {
                 : Sort.by(sortBy).descending();
     }
 
-    private List<OrderDTO> transformOrdersToDTO(List<Order> orders) {
+    private List<OrderDto> transformOrdersToDTO(List<Order> orders) {
         return orders.stream()
                 .map(this::convertEntityToDTO)
                 .toList();
     }
 
-    private OrderDTO convertEntityToDTO(Order order) {
-        return modelMapper.map(order, OrderDTO.class);
+    private OrderDto convertEntityToDTO(Order order) {
+        return objectMapper.map(order, OrderDto.class);
     }
 
-    private OrderResponse buildOrderResponse(Page<Order> paginatedOrders, List<OrderDTO> orderDataList) {
+    private OrderResponse buildOrderResponse(Page<Order> paginatedOrders, List<OrderDto> orderDataList) {
         OrderResponse responsePayload = new OrderResponse();
         responsePayload.setContent(orderDataList);
         responsePayload.setPageNumber(paginatedOrders.getNumber());

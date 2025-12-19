@@ -19,7 +19,7 @@ public class IAnalyticsServiceImpl implements IAnalyticsService {
     }
 
     @Override
-    public AnalyticsResponse getAnalyticsData() {
+    public AnalyticsResponse getAnalytics() {
         long productCount = calculateProductCount();
         long totalOrders = calculateTotalOrders();
         Double totalRevenue = calculateTotalRevenue();

@@ -1,7 +1,5 @@
 package com.ecommerce.project.JwtAuth.jwt;
 
-import java.io.IOException;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +15,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.ecommerce.project.JwtAuth.services.UserDetailsServiceImpl;
 
+import java.io.IOException;
+
+/**
+ * Filter that runs on every request to check for JWT authentication.
+ * Extracts JWT token from request, validates it, and sets up authentication.
+ * Extends OncePerRequestFilter to ensure it runs exactly once per request.
+ */
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
 
@@ -33,6 +38,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Main filter method called for every request.
+     * Tries to authenticate the user based on JWT token.
+     * If authentication fails, request continues but user remains unauthenticated.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {

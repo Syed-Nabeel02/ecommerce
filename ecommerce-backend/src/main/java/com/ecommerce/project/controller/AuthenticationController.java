@@ -18,6 +18,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller for user authentication and profile management
+ * Handles user registration, login, logout, and profile operations
+ * Base URL: /api/auth
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
@@ -28,7 +33,21 @@ public class AuthenticationController {
         this.IAuthenticationService = IAuthenticationService;
     }
 
-    @PostMapping("/signin")
+    /**
+     * Register a new user account
+     * Endpoint: POST /api/auth/register
+     */
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        return IAuthenticationService.register(signUpRequest);
+    }
+
+    /**
+     * Login user and create session
+     * Endpoint: POST /api/auth/login
+     * Returns JWT cookie and user details
+     */
+    @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         if (loginRequest == null || loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
             return ResponseEntity.badRequest().body(new MessageResponse("Invalid login request"));
@@ -45,12 +64,11 @@ public class AuthenticationController {
                 .body(result.getResponse());
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        return IAuthenticationService.register(signUpRequest);
-    }
-
-    @GetMapping("/username")
+    /**
+     * Get current logged-in user's username
+     * Endpoint: GET /api/auth/profile/username
+     */
+    @GetMapping("/profile/username")
     public String currentUserName(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             return "";
@@ -58,12 +76,21 @@ public class AuthenticationController {
         return authentication.getName();
     }
 
-    @GetMapping("/user")
+    /**
+     * Get current logged-in user's full profile details
+     * Endpoint: GET /api/auth/profile
+     */
+    @GetMapping("/profile")
     public ResponseEntity<?> getUserDetails(Authentication authentication) {
         return ResponseEntity.ok().body(IAuthenticationService.getCurrentUserDetails(authentication));
     }
 
-    @PostMapping("/signout")
+    /**
+     * Logout user and clear session
+     * Endpoint: POST /api/auth/logout
+     * Clears JWT cookie
+     */
+    @PostMapping("/logout")
     public ResponseEntity<?> signoutUser() {
         ResponseCookie cookie = IAuthenticationService.logoutUser();
         if (cookie == null) {
@@ -74,7 +101,13 @@ public class AuthenticationController {
                 .body(new MessageResponse("You've been signed out!"));
     }
 
-    @GetMapping("/customers")
+    /**
+     * Get all customers (users with ROLE_USER)
+     * Endpoint: GET /api/auth/admin/users
+     * Admin only - requires ADMIN role
+     * Supports pagination
+     */
+    @GetMapping("/admin/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllCustomers(
             @RequestParam(name = "pageNumber", defaultValue = Constants.page_num, required = false) Integer pageNumber) {
@@ -95,7 +128,12 @@ public class AuthenticationController {
         return ResponseEntity.ok(IAuthenticationService.getAllCustomers(pageDetails));
     }
 
-    @PutMapping("/user/username")
+    /**
+     * Update current user's username
+     * Endpoint: PUT /api/auth/profile/username
+     * Validates that new username is not already taken
+     */
+    @PutMapping("/profile/username")
     public ResponseEntity<?> updateUsername(
             @Valid @RequestBody UpdateUsernameRequest request,
             Authentication authentication) {

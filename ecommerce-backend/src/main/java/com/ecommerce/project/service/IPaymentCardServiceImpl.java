@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import com.ecommerce.project.DAO.PaymentCardDAO;
 import com.ecommerce.project.DAO.UserDAO;
 import com.ecommerce.project.DTO.PaymentCardDTO;
-import com.ecommerce.project.errorHandler.APIException;
+import com.ecommerce.project.errorHandler.APIErrorHandler;
 import com.ecommerce.project.errorHandler.ResourceNotFoundException;
 import com.ecommerce.project.model.PaymentCard;
 import com.ecommerce.project.model.User;
@@ -19,12 +19,12 @@ public class IPaymentCardServiceImpl implements IPaymentCardService {
 
     private final PaymentCardDAO paymentCardDAO;
     private final UserDAO userDAO;
-    private final ModelMapper modelMapper;
+    private final ModelMapper objectMapper;
 
-    public IPaymentCardServiceImpl(PaymentCardDAO paymentCardDAO, UserDAO userDAO, ModelMapper modelMapper) {
+    public IPaymentCardServiceImpl(PaymentCardDAO paymentCardDAO, UserDAO userDAO, ModelMapper objectMapper) {
         this.paymentCardDAO = paymentCardDAO;
         this.userDAO = userDAO;
-        this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -108,11 +108,11 @@ public class IPaymentCardServiceImpl implements IPaymentCardService {
     }
 
     private PaymentCard convertDTOToEntity(PaymentCardDTO paymentCardDTO) {
-        return modelMapper.map(paymentCardDTO, PaymentCard.class);
+        return objectMapper.map(paymentCardDTO, PaymentCard.class);
     }
 
     private PaymentCardDTO convertEntityToDTO(PaymentCard paymentCard) {
-        return modelMapper.map(paymentCard, PaymentCardDTO.class);
+        return objectMapper.map(paymentCard, PaymentCardDTO.class);
     }
 
     private List<PaymentCardDTO> transformCardsToDTO(List<PaymentCard> cards) {
@@ -177,7 +177,7 @@ public class IPaymentCardServiceImpl implements IPaymentCardService {
 
     private void validateCardBelongsToUser(PaymentCard card, User user) {
         if (!card.getUser().getUserId().equals(user.getUserId())) {
-            throw new APIException("Card does not belong to user");
+            throw new APIErrorHandler("This card does not belong to the current user");
         }
     }
 
@@ -195,6 +195,6 @@ public class IPaymentCardServiceImpl implements IPaymentCardService {
     }
 
     private String buildDeletionMessage(Long cardId) {
-        return "Payment card deleted successfully with cardId: " + cardId;
+        return "Payment card has been successfully removed (ID: " + cardId + ")";
     }
 }

@@ -5,7 +5,11 @@ import java.util.Set;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
-
+/**
+ * Request DTO for user registration.
+ * Contains user credentials, optional address, and payment card info.
+ * Allows users to sign up and optionally provide shipping/payment details.
+ */
 public class SignupRequest {
     @NotBlank
     @Size(min = 3, max = 20)

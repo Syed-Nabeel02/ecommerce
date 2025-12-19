@@ -6,9 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import PaymentCardList from '../../CheckoutPage/components/PaymentSection/PaymentCardList';
 import ConfirmDeleteDialog from '../../../components/ui/modals/ConfirmDeleteDialog';
 import toast from 'react-hot-toast';
-import { deleteUserPaymentCard } from '../../../store/actions';
+import { deleteUserPaymentCard, deleteUserPaymentCardForCustomer } from '../../../store/actions';
 
-const PaymentCardInfo = ({ cards }) => {
+const PaymentCardInfo = ({ cards, customerId, isAdminMode = false }) => {
     const [openCardModal, setOpenCardModal] = useState(false);
     const [openConfirmDeleteDialog, setOpenConfirmDeleteDialog] = useState(false);
     const [selectedCard, setSelectedCard] = useState("");
@@ -21,11 +21,20 @@ const PaymentCardInfo = ({ cards }) => {
     const dispatch = useDispatch();
 
     const deleteCardHandler = () => {
-        dispatch(deleteUserPaymentCard(
-            toast,
-            selectedCard?.cardId,
-            setOpenConfirmDeleteDialog
-        ));
+        if (isAdminMode && customerId) {
+            dispatch(deleteUserPaymentCardForCustomer(
+                customerId,
+                toast,
+                selectedCard?.cardId,
+                setOpenConfirmDeleteDialog
+            ));
+        } else {
+            dispatch(deleteUserPaymentCard(
+                toast,
+                selectedCard?.cardId,
+                setOpenConfirmDeleteDialog
+            ));
+        }
     };
 
     const noCardsExist = !cards || cards.length === 0;
@@ -81,7 +90,10 @@ const PaymentCardInfo = ({ cards }) => {
                 setOpen={setOpenCardModal}>
                 <AddPaymentCardForm
                     card={selectedCard}
-                    setOpenCardModal={setOpenCardModal} />
+                    setOpenCardModal={setOpenCardModal}
+                    customerId={customerId}
+                    isAdminMode={isAdminMode}
+                />
             </AddressInfoModal>
 
             <ConfirmDeleteDialog

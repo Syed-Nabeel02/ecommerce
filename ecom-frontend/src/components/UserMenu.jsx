@@ -1,29 +1,53 @@
+/**
+ * UserMenu.jsx
+ * Dropdown menu for logged-in users showing profile options, admin panel, and logout.
+ * Displays user avatar with first letter of username and shows different options based on user role.
+ */
+
+// Material-UI components for avatar and dropdown menu
 import { Avatar, Menu, MenuItem } from '@mui/material';
+// React core library
 import React from 'react'
+// Icons for menu items (profile, admin, logout)
 import { BiUser } from 'react-icons/bi';
 import { FaUserShield } from 'react-icons/fa';
 import { IoExitOutline } from 'react-icons/io5';
+// Redux hooks to access state and dispatch actions
 import { useDispatch, useSelector } from 'react-redux';
+// React Router for navigation
 import { Link, useNavigate } from 'react-router-dom';
+// Backdrop overlay when menu is open
 import BackDrop from './BackDrop';
+// Redux action to log out user
 import { performUserLogout } from '../store/actions';
 
+/**
+ * UserMenu Component
+ * Displays a user profile dropdown menu in the navbar
+ */
 const UserMenu = () => {
+    // Track menu open/close state and anchor element for positioning
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
+    // Get current user info from Redux store
     const { currentUser } = useSelector((state) => state.authentication);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    // Check if current user has admin privileges
     const isAdmin = currentUser && currentUser?.roles.includes("ROLE_ADMIN");
 
+    // Open menu when avatar is clicked
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
     };
+
+    // Close menu
     const handleClose = () => {
       setAnchorEl(null);
     };
 
+    // Log out user and redirect to home page
     const logOutHandler = () => {
         dispatch(performUserLogout(navigate));
     };

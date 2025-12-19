@@ -1,8 +1,13 @@
 /**
  * BackDrop.jsx
- * Loading backdrop overlay component.
+ * Semi-transparent overlay that appears behind modals and dropdowns.
+ * Creates a focus effect by dimming the background content.
  */
 
+/**
+ * BackDrop Component
+ * @param {object} data - If provided, adjusts top position to account for navbar
+ */
 const BackDrop = ({ data }) => {
   return (
     <div

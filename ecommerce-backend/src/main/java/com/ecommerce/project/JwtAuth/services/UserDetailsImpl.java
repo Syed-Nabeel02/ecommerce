@@ -14,6 +14,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.ecommerce.project.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+/**
+ * Spring Security's representation of a user.
+ * Wraps our User entity to work with Spring Security.
+ * Contains user credentials and authorities (roles/permissions).
+ */
 @NoArgsConstructor
 @Data
 public class UserDetailsImpl implements UserDetails {
@@ -39,6 +44,10 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
 
+    /**
+     * Converts our User entity to Spring Security's UserDetails.
+     * Extracts roles from user and converts them to Spring Security authorities.
+     */
     public static UserDetailsImpl build(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getRoleName().name()))

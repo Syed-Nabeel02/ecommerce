@@ -2,6 +2,11 @@ package com.ecommerce.project.JwtAuth.response;
 
 import java.util.List;
 
+/**
+ * Response DTO sent after successful login.
+ * Contains user info and JWT token for authentication.
+ * Frontend stores the token and includes it in subsequent requests.
+ */
 public class UserInfoResponse {
     private Long id;
     private String jwtToken;

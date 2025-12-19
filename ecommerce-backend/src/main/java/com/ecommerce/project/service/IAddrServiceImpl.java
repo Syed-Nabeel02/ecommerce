@@ -2,14 +2,14 @@ package com.ecommerce.project.service;
 
 import java.util.List;
 
+import com.ecommerce.project.model.Address;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.project.DAO.AddressDAO;
 import com.ecommerce.project.DAO.UserDAO;
-import com.ecommerce.project.DTO.AddressDTO;
+import com.ecommerce.project.DTO.AddressDto;
 import com.ecommerce.project.errorHandler.ResourceNotFoundException;
-import com.ecommerce.project.model.Address;
 import com.ecommerce.project.model.User;
 import com.ecommerce.project.service.Interface.IAddrService;
 
@@ -18,16 +18,16 @@ public class IAddrServiceImpl implements IAddrService {
 
     private final AddressDAO addressDAO;
     private final UserDAO userDAO;
-    private final ModelMapper modelMapper;
+    private final ModelMapper objectMapper;
 
-    public IAddrServiceImpl(AddressDAO addressDAO, UserDAO userDAO, ModelMapper modelMapper) {
+    public IAddrServiceImpl(AddressDAO addressDAO, UserDAO userDAO, ModelMapper objectMapper) {
         this.addressDAO = addressDAO;
         this.userDAO = userDAO;
-        this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    public AddressDTO newAddress(AddressDTO addressDTO, User user) {
+    public AddressDto newAddr(AddressDto addressDTO, User user) {
         Address addressEntity = convertDTOToEntity(addressDTO);
         associateAddressWithUser(addressEntity, user);
 
@@ -36,32 +36,32 @@ public class IAddrServiceImpl implements IAddrService {
     }
 
     @Override
-    public List<AddressDTO> getAddr() {
+    public List<AddressDto> getAddr() {
         List<Address> allAddresses = addressDAO.findAll();
         return transformAddressesToDTOs(allAddresses);
     }
 
     @Override
-    public AddressDTO getAddrById(Long addressId) {
+    public AddressDto getAddrById(Long addressId) {
         Address retrievedAddress = fetchAddressOrThrowException(addressId);
         return convertEntityToDTO(retrievedAddress);
     }
 
     @Override
-    public List<AddressDTO> getUserAddr(User user) {
+    public List<AddressDto> getUserAddr(User user) {
         List<Address> userAddressList = user.getAddresses();
         return transformAddressesToDTOs(userAddressList);
     }
 
     @Override
-    public List<AddressDTO> getAddrByUserId(Long userId) {
+    public List<AddressDto> getAddrByUserId(Long userId) {
         User retrievedUser = fetchUserOrThrowException(userId);
         List<Address> userAddressList = retrievedUser.getAddresses();
         return transformAddressesToDTOs(userAddressList);
     }
 
     @Override
-    public AddressDTO updateAddr(Long addressId, AddressDTO addressDTO) {
+    public AddressDto updateAddr(Long addressId, AddressDto addressDTO) {
         Address existingAddress = fetchAddressOrThrowException(addressId);
         applyAddressUpdates(existingAddress, addressDTO);
 
@@ -82,15 +82,15 @@ public class IAddrServiceImpl implements IAddrService {
         return buildDeletionMessage(addressId);
     }
 
-    private Address convertDTOToEntity(AddressDTO addressDTO) {
-        return modelMapper.map(addressDTO, Address.class);
+    private Address convertDTOToEntity(AddressDto addressDTO) {
+        return objectMapper.map(addressDTO, Address.class);
     }
 
-    private AddressDTO convertEntityToDTO(Address address) {
-        return modelMapper.map(address, AddressDTO.class);
+    private AddressDto convertEntityToDTO(Address address) {
+        return objectMapper.map(address, AddressDto.class);
     }
 
-    private List<AddressDTO> transformAddressesToDTOs(List<Address> addresses) {
+    private List<AddressDto> transformAddressesToDTOs(List<Address> addresses) {
         return addresses.stream()
                 .map(this::convertEntityToDTO)
                 .toList();
@@ -113,7 +113,7 @@ public class IAddrServiceImpl implements IAddrService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
     }
 
-    private void applyAddressUpdates(Address targetAddress, AddressDTO sourceDTO) {
+    private void applyAddressUpdates(Address targetAddress, AddressDto sourceDTO) {
         targetAddress.setCity(sourceDTO.getCity());
         targetAddress.setPincode(sourceDTO.getPincode());
         targetAddress.setState(sourceDTO.getState());
@@ -134,6 +134,6 @@ public class IAddrServiceImpl implements IAddrService {
     }
 
     private String buildDeletionMessage(Long addressId) {
-        return "Address deleted successfully with addressId: " + addressId;
+        return "Address has been successfully removed (ID: " + addressId + ")";
     }
 }

@@ -1,212 +1,186 @@
-// Form for adding or editing products in admin panel
-import React, { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import TextInput from '../../../../components/ui/forms/TextInput';
-import { Button } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import { createDashboardProduct, loadCategoryList, modifyDashboardProduct } from '../../../../store/actions';
+import { Button } from '@mui/material';
 import toast from 'react-hot-toast';
+import TextInput from '../../../../components/ui/forms/TextInput';
 import SelectDropdown from '../../../../components/ui/forms/SelectDropdown';
 import ErrorDisplay from '../../../../components/ui/feedback/ErrorDisplay';
+import { createDashboardProduct, loadCategoryList, modifyDashboardProduct } from '../../../../store/actions';
 
-const AddProductForm = ({ setOpen, product, update=false, navigate, pathname}) => {
-// State for button loading
-const [loader, setLoader] = useState(false);
+const AddProductForm = ({ setOpen, product, update = false, navigate, pathname }) => {
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [pickedCategory, setPickedCategory] = useState();
 
-// State for selected category
-const [selectedCategory, setSelectedCategory] = useState();
+  const { categoryList } = useSelector((state) => state.catalog);
+  const { categoryLoader, errorMessage } = useSelector((state) => state.errors);
 
-// Get category list from Redux store
-const { categoryList } = useSelector((state) => state.catalog);
-
-// Get loading and error states
-const { categoryLoader, errorMessage } = useSelector((state) => state.errors);
-
-// Redux dispatcher
-const dispatch = useDispatch();
-
-// Form validation using react-hook-form
-const {
+  const {
     register,
     handleSubmit,
     reset,
     setValue,
-    formState: { errors }
-} = useForm({
-    mode: "onTouched"
-});
+    formState: { errors },
+  } = useForm({
+    mode: 'onTouched',
+  });
 
-// Handle form submission (create or update product)
-const saveProductHandler = (data) => {
-    if(!update) {
-        // Creating new product - add category ID
-        const sendData = {
-            ...data,
-            categoryId: selectedCategory.categoryId,
-        };
-        dispatch(createDashboardProduct(
-            sendData, toast, reset, setLoader, setOpen
-        ));
-    } else {
-        // Updating existing product - add product ID
-        const sendData = {
-            ...data,
-            id: product.id,
-        };
-        dispatch(modifyDashboardProduct(sendData, toast, reset, setLoader, setOpen, navigate, pathname));
-    }
-};
-
-// When editing, fill form with existing product data
-useEffect(() => {
-    if (update && product) {
-        setValue("productName", product?.productName);
-        setValue("model", product?.model);
-        setValue("price", product?.price);
-        setValue("quantity", product?.quantity);
-        setValue("description", product?.description);
-    }
-}, [update, product]);
-
-// Load categories when creating new product
-useEffect(() => {
+  const handleProductSave = (formData) => {
     if (!update) {
-        dispatch(loadCategoryList());
+      const newProductData = {
+        ...formData,
+        categoryId: pickedCategory.categoryId,
+      };
+      dispatch(createDashboardProduct(newProductData, toast, reset, setIsLoading, setOpen));
+    } else {
+      const updatedProductData = {
+        ...formData,
+        id: product.id,
+      };
+      dispatch(modifyDashboardProduct(updatedProductData, toast, reset, setIsLoading, setOpen, navigate, pathname));
     }
-}, [dispatch, update]);
+  };
 
-// Auto-select first category when categories load
-useEffect(() => {
-    if (!categoryLoader && categoryList) {
-        setSelectedCategory(categoryList[0]);
+  useEffect(() => {
+    if (update && product) {
+      setValue('productName', product?.productName);
+      setValue('model', product?.model);
+      setValue('price', product?.price);
+      setValue('quantity', product?.quantity);
+      setValue('description', product?.description);
     }
-}, [categoryList, categoryLoader]);
+  }, [update, product, setValue]);
 
-// Show error if there's a problem loading categories
-if (errorMessage) return <ErrorDisplay message={errorMessage} />
+  useEffect(() => {
+    if (!update) {
+      dispatch(loadCategoryList());
+    }
+  }, [dispatch, update]);
 
-return (
-  <div className='py-5 relative h-full'>
-      <form className='space-y-4'
-          onSubmit={handleSubmit(saveProductHandler)}>
-          {/* Product name and category row */}
-          <div className='flex md:flex-row flex-col gap-4 w-full'>
-              <TextInput
-                  label="Product Name"
-                  required
-                  id="productName"
-                  type="text"
-                  message="This field is required*"
-                  register={register}
-                  placeholder="Product Name"
-                  errors={errors}
-                  />
+  useEffect(() => {
+    if (!categoryLoader && categoryList?.length > 0) {
+      setPickedCategory(categoryList[0]);
+    }
+  }, [categoryList, categoryLoader]);
 
-              {/* Only show category dropdown when creating new product */}
-              {!update && (
-                  <SelectDropdown
-                      label="Select Categories"
-                      select={selectedCategory}
-                      setSelect={setSelectedCategory}
-                      lists={categoryList}
-                  />
-              )}
-          </div>
+  if (errorMessage) return <ErrorDisplay message={errorMessage} />;
 
-          {/* Price and quantity row */}
-          <div className='flex md:flex-row flex-col gap-4 w-full'>
-              <TextInput
-                  label="Price"
-                  required
-                  id="price"
-                  type="number"
-                  message="This field is required*"
-                  placeholder="Product Price"
-                  register={register}
-                  errors={errors}
-                  />
+  const submitButtonText = isLoading ? 'Loading...' : update ? 'Update' : 'Save';
 
-                  <TextInput
-                  label="Quantity"
-                  required
-                  id="quantity"
-                  type="number"
-                  message="This field is required*"
-                  register={register}
-                  placeholder="Product Quantity"
-                  errors={errors}
-                  />
-          </div>
-
-      {/* Model field */}
-      <div className='flex md:flex-row flex-col gap-4 w-full'>
+  return (
+    <div className='py-6 relative h-full bg-white'>
+      <form className='space-y-6' onSubmit={handleSubmit(handleProductSave)}>
+        {/* Product Name and Category */}
+        <div className='flex md:flex-row flex-col gap-4 w-full'>
           <TextInput
-              label="Model"
-              id="model"
-              type="text"
-              message=""
-              register={register}
-              placeholder="Product Model (Optional)"
-              errors={errors}
-              />
-      </div>
+            label='Product Name'
+            required
+            id='productName'
+            type='text'
+            message='This field is required*'
+            register={register}
+            placeholder='Enter product name'
+            errors={errors}
+          />
 
-      {/* Description field */}
-      <div className="flex flex-col gap-2 w-full">
-          <label htmlFor='desc'
-            className='font-semibold text-sm text-slate-800'>
-              Description
+          {!update && (
+            <SelectDropdown
+              label='Select Category'
+              select={pickedCategory}
+              setSelect={setPickedCategory}
+              lists={categoryList}
+            />
+          )}
+        </div>
+
+        {/* Price and Quantity */}
+        <div className='flex md:flex-row flex-col gap-4 w-full'>
+          <TextInput
+            label='Price'
+            required
+            id='price'
+            type='number'
+            message='This field is required*'
+            placeholder='Enter product price'
+            register={register}
+            errors={errors}
+          />
+
+          <TextInput
+            label='Quantity'
+            required
+            id='quantity'
+            type='number'
+            message='This field is required*'
+            register={register}
+            placeholder='Enter product quantity'
+            errors={errors}
+          />
+        </div>
+
+        {/* Model */}
+        <div className='flex md:flex-row flex-col gap-4 w-full'>
+          <TextInput
+            label='Model'
+            id='model'
+            type='text'
+            message=''
+            register={register}
+            placeholder='Enter product model (Optional)'
+            errors={errors}
+          />
+        </div>
+
+        {/* Description */}
+        <div className='flex flex-col gap-2 w-full'>
+          <label htmlFor='description' className='font-semibold text-sm text-gray-800'>
+            Description
           </label>
 
           <textarea
-              rows={5}
-              placeholder="Add product description...."
-              className={`px-4 py-2 w-full border outline-hidden bg-transparent text-slate-800 rounded-md ${
-                  errors["description"]?.message ? "border-red-500" : "border-slate-700"
-              }`}
-              maxLength={255}
-              {...register("description", {
-                  required: {value: true, message:"Description is required"},
-                  minLength: {value: 10, message: "Description must be at least 10 characters"},
-                  maxLength: {value: 255, message: "Description must not exceed 255 characters"},
-              })}
-              />
+            id='description'
+            rows={5}
+            placeholder='Add product description...'
+            className={`px-4 py-2 w-full border outline-none bg-transparent text-gray-800 rounded-lg transition-colors duration-200 ${
+              errors['description']?.message ? 'border-red-500 focus:border-red-600' : 'border-gray-300 focus:border-red-600'
+            }`}
+            maxLength={255}
+            {...register('description', {
+              required: { value: true, message: 'Description is required' },
+              minLength: { value: 10, message: 'Description must be at least 10 characters' },
+              maxLength: { value: 255, message: 'Description must not exceed 255 characters' },
+            })}
+          />
 
-              {/* Show error message if description is invalid */}
-              {errors["description"]?.message && (
-                  <p className="text-sm font-semibold text-red-600 mt-0">
-                      {errors["description"]?.message}
-                  </p>
-              )}
-      </div>
+          {errors['description']?.message && (
+            <p className='text-sm font-semibold text-red-600 mt-1'>{errors['description']?.message}</p>
+          )}
+        </div>
 
-      {/* Cancel and Save buttons */}
-      <div className='flex w-full justify-between items-center absolute bottom-14'>
-          <Button disabled={loader}
-                  onClick={() => setOpen(false)}
-                  variant='outlined'
-                  className='text-white py-[10px] px-4 text-sm font-medium'>
-              Cancel
+        {/* Cancel and Save Buttons */}
+        <div className='flex w-full justify-between items-center absolute bottom-6 left-0 right-0 px-8'>
+          <Button
+            disabled={isLoading}
+            onClick={() => setOpen(false)}
+            variant='outlined'
+            className='text-gray-700 py-2 px-6 text-sm font-medium border-gray-300'
+          >
+            Cancel
           </Button>
 
           <Button
-              disabled={loader}
-              type='submit'
-              variant='contained'
-              color='primary'
-              className='bg-custom-blue text-white  py-[10px] px-4 text-sm font-medium'>
-              {loader ? (
-                  <div className='flex gap-2 items-center'>
-                       Loading...
-                  </div>
-              ) : (
-                  "Save"
-              )}
+            disabled={isLoading}
+            type='submit'
+            variant='contained'
+            className='bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white py-2 px-6 text-sm font-medium'
+          >
+            {submitButtonText}
           </Button>
-      </div>
+        </div>
       </form>
-  </div>
-)
-}
+    </div>
+  );
+};
 
-export default AddProductForm
+export default AddProductForm;
