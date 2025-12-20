@@ -6,14 +6,8 @@
 
 // Headless UI components for accessible modal dialogs
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-// Icons for stock status (checkmark for in stock, X for out of stock)
-import { MdClose, MdDone } from 'react-icons/md';
-// Close icon for modal
-import { RxCross1 } from 'react-icons/rx';
 // Material-UI divider for visual separation
 import { Divider } from '@mui/material';
-// Status badge component for stock availability
-import StatusBadgeBadge from '../feedback/StatusBadge';
 
 /**
  * ProductQuickView Component
@@ -24,7 +18,7 @@ import StatusBadgeBadge from '../feedback/StatusBadge';
  */
 function ProductQuickView({ open, setOpen, product, isAvailable }) {
   // Destructure product details
-  const { productName, model, image, description, price } = product;
+  const { productName, model, image, description, price, quantity } = product;
 
   // Close modal handler
   const closeModal = () => setOpen(false);
@@ -56,18 +50,11 @@ function ProductQuickView({ open, setOpen, product, isAvailable }) {
             {/* Content Section */}
             <div className='px-6 pt-8 pb-4'>
 
-              {/* Header with Title and Close Button */}
-              <div className='flex justify-between items-start gap-4 mb-6'>
-                <DialogTitle as="h1" className="lg:text-3xl sm:text-2xl text-xl font-bold text-gray-900 flex-1">
+              {/* Header with Title */}
+              <div className='mb-6'>
+                <DialogTitle as="h1" className="lg:text-3xl sm:text-2xl text-xl font-bold text-gray-900">
                   {productName}
                 </DialogTitle>
-                <button
-                  onClick={closeModal}
-                  className='text-red-600 hover:text-red-700 transition-colors duration-200 flex-shrink-0'
-                  aria-label="Close modal"
-                >
-                  <RxCross1 className='text-2xl' />
-                </button>
               </div>
 
               {/* Model Info */}
@@ -85,21 +72,27 @@ function ProductQuickView({ open, setOpen, product, isAvailable }) {
                   ${formattedPrice}
                 </span>
 
-                {isAvailable ? (
-                  <StatusBadgeBadge
-                    text="In Stock"
-                    icon={MdDone}
-                    bg="bg-teal-200"
-                    color="text-teal-900"
-                  />
-                ) : (
-                  <StatusBadgeBadge
-                    text="Out-Of-Stock"
-                    icon={MdClose}
-                    bg="bg-rose-200"
-                    color="text-rose-700"
-                  />
-                )}
+                {/* Stock Info */}
+                <div>
+                  {isAvailable ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {quantity} in stock
+                      </span>
+                      {quantity < 10 && (
+                        <span className="text-sm text-red-600 font-semibold">
+                          • Hurry up!
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                      <span className="text-sm text-red-600 font-semibold">Out of Stock</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Description */}
